@@ -33,6 +33,7 @@ fun SettingsScreen(
     onNavigateToVercelSync: () -> Unit,
     onNavigateToRoles: () -> Unit,
     onNavigateToApprovals: () -> Unit,
+    onNavigateToSubscriptionConfig: () -> Unit = {},
     modifier: Modifier = Modifier
 ) {
     val context = LocalContext.current
@@ -206,6 +207,13 @@ fun SettingsScreen(
                     )
                     Spacer(modifier = Modifier.height(10.dp))
 
+                    SettingNavItem(
+                        title = if (isBn) "সাবস্ক্রিপশন ও চাঁদা কনফিগারেশন মডিউল" else "Subscription & Due Rules Module",
+                        subtitle = if (isBn) "মাসিক চাঁদার হার, শেষ তারিখ ও বিলম্ব জরিমানা রুলস" else "Monthly dues, due dates, grace & late fee rules",
+                        icon = Icons.Default.EventRepeat,
+                        onClick = onNavigateToSubscriptionConfig
+                    )
+                    Divider()
                     SettingNavItem(
                         title = if (isBn) "লেটারহেড, লোগো ও ডিজিটাল সিল-স্বাক্ষর" else "Letterhead, Signatures & Seals",
                         subtitle = if (isBn) "প্যাড ডিজাইন, স্লোগান ও ৩ কর্মকর্তার স্বাক্ষর" else "Custom pad, slogan & 3 signatories",

@@ -339,3 +339,23 @@ data class MemberCredential(
     val activatedAt: String? = "২০-১০-২০২৬"
 )
 
+/**
+ * Subscription & Recurring Due Configuration Model.
+ * Configured by Admins to manage monthly due amounts, due dates, grace periods, and late fees.
+ */
+data class SubscriptionConfig(
+    val samityId: String,
+    val monthlyDueAmount: Double = 5000.0,
+    val dueDayOfMonth: Int = 10,
+    val gracePeriodDays: Int = 5,
+    val lateFeeType: String = "Fixed Daily", // "Fixed Daily", "One-Time Flat", "Percentage"
+    val lateFeeAmount: Double = 50.0,
+    val lateFeePercentage: Double = 2.0,
+    val autoSendSmsReminder: Boolean = true,
+    val reminderDaysBeforeDue: Int = 3,
+    val applyToExistingMembers: Boolean = true,
+    val updatedBy: String = "সুপার অ্যাডমিন",
+    val updatedAt: String = "2026-10-25"
+)
+
+

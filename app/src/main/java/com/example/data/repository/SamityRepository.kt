@@ -73,6 +73,7 @@ class SamityRepository(
     val signatories = mutableStateListOf<Signatory>()
     val licenses = mutableStateListOf<SamityLicenseConfig>()
     val memberCredentials = mutableStateListOf<MemberCredential>()
+    val subscriptionConfigs = mutableStateListOf<SubscriptionConfig>()
     var letterheadConfig by mutableStateOf(
         LetterheadConfig(samityId = "samity_1")
     )
@@ -224,6 +225,24 @@ class SamityRepository(
     }
 
     /**
+     * Retrieves subscription & due rules configuration scoped automatically to the current 'samity_id'.
+     */
+    fun getSubscriptionConfig(samityId: String = activeSamityId): SubscriptionConfig {
+        return subscriptionConfigs.firstOrNull { it.samityId == samityId }
+            ?: SubscriptionConfig(
+                samityId = samityId,
+                monthlyDueAmount = getActiveSamity(samityId).defaultMonthlyFee,
+                dueDayOfMonth = getActiveSamity(samityId).dueDayOfMonth,
+                gracePeriodDays = getActiveSamity(samityId).gracePeriodDays,
+                lateFeeAmount = if (getActiveSamity(samityId).lateFeeAmount > 0) getActiveSamity(samityId).lateFeeAmount else 50.0
+            ).also {
+                if (subscriptionConfigs.none { c -> c.samityId == samityId }) {
+                    subscriptionConfigs.add(it)
+                }
+            }
+    }
+
+    /**
      * Retrieves samity profile scoped automatically to the current 'samity_id'.
      */
     fun getActiveSamity(samityId: String = activeSamityId): Samity {
@@ -233,6 +252,9 @@ class SamityRepository(
     // Direct property bindings delegating to auto-filtered query methods
     val activeSamity: Samity
         get() = getActiveSamity()
+
+    val activeSubscriptionConfig: SubscriptionConfig
+        get() = getSubscriptionConfig()
 
     val activeMembers: List<Member>
         get() = getMembers()
@@ -782,6 +804,77 @@ class SamityRepository(
             return true
         }
         return false
+    }
+
+    /**
+     * Admin updates Subscription & Recurring Due Configuration:
+     * - Monthly due amount
+     * - Due date of month
+     * - Grace period days
+     * - Late fee rules (Fixed daily, one-time flat, percentage)
+     * - Automated reminder rules
+     * - Synchronizes across active samity, members, and real-time cloud broadcast.
+     */
+    fun updateSubscriptionConfig(config: SubscriptionConfig, applyToExisting: Boolean = false): Boolean {
+        if (!userSession.canPerform(AppPermission.MANAGE_SAMITY_CONFIG)) {
+            addSecurityAudit(
+                actionBn = "অননুমোদিত সাবস্ক্রিপশন কনফিগারেশন প্রচেষ্টা",
+                actionEn = "Unauthorized Subscription Config Update Blocked",
+                details = "Role ${userSession.currentUserRole} lacks MANAGE_SAMITY_CONFIG permission"
+            )
+            return false
+        }
+
+        val idx = subscriptionConfigs.indexOfFirst { it.samityId == config.samityId }
+        if (idx != -1) {
+            subscriptionConfigs[idx] = config
+        } else {
+            subscriptionConfigs.add(config)
+        }
+
+        // Keep active Samity profile in sync
+        val sIdx = samities.indexOfFirst { it.id == config.samityId }
+        if (sIdx != -1) {
+            samities[sIdx] = samities[sIdx].copy(
+                defaultMonthlyFee = config.monthlyDueAmount,
+                dueDayOfMonth = config.dueDayOfMonth,
+                gracePeriodDays = config.gracePeriodDays,
+                lateFeeAmount = config.lateFeeAmount
+            )
+        }
+
+        // Apply to active members if requested
+        if (applyToExisting) {
+            for (i in members.indices) {
+                if (members[i].samityId == config.samityId) {
+                    val m = members[i]
+                    val newDue = (m.totalDue - m.monthlyFee + config.monthlyDueAmount).coerceAtLeast(0.0)
+                    members[i] = m.copy(
+                        monthlyFee = config.monthlyDueAmount,
+                        totalDue = newDue
+                    )
+                }
+            }
+        }
+
+        // Add audit trail entry
+        addAudit(
+            actionBn = "সাবস্ক্রিপশন ও চাঁদা নিয়ম আপডেট",
+            actionEn = "Subscription & Late Fee Rules Updated",
+            details = "মাসিক চাঁদা: ${config.monthlyDueAmount} ৳, শেষ দিন: ${config.dueDayOfMonth} তারিখ, গ্রেস: ${config.gracePeriodDays} দিন, লেট ফি: ${config.lateFeeAmount} ৳ (${config.lateFeeType})"
+        )
+
+        // Broadcast real-time cloud sync notification
+        syncEngine.latestNotification = LiveSyncNotification(
+            titleBn = "⚙️ চাঁদা ও সাবস্ক্রিপশন নিয়ম আপডেট!",
+            titleEn = "Subscription Rules Updated",
+            descriptionBn = "মাসিক চাঁদা ${config.monthlyDueAmount.toInt()} ৳, নির্ধারিত তারিখ ${config.dueDayOfMonth} এবং বিলম্ব ফি ${config.lateFeeAmount.toInt()} ৳ কার্যকর করা হয়েছে।",
+            descriptionEn = "Monthly due set to ${config.monthlyDueAmount.toInt()} BDT, due date ${config.dueDayOfMonth}th. Reflected on Android & Vercel.",
+            originDevice = "অ্যান্ড্রয়েড অ্যাডমিন কনসোল",
+            timestamp = SimpleDateFormat("HH:mm:ss", Locale.getDefault()).format(Date())
+        )
+
+        return true
     }
 
 

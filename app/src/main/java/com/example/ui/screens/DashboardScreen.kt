@@ -49,6 +49,7 @@ fun DashboardScreen(
     onNavigateToApprovalWorkflow: () -> Unit = {},
     onNavigateToBackupExport: () -> Unit = {},
     onNavigateToSettings: () -> Unit = {},
+    onNavigateToSubscriptionConfig: () -> Unit = {},
     onViewReceipt: (Deposit) -> Unit,
     onNavigateToVercelSync: () -> Unit = {},
     modifier: Modifier = Modifier

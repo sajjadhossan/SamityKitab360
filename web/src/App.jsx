@@ -83,6 +83,20 @@ export default function App() {
     establishedYear: "২০১৮"
   });
 
+  // 1.1 Subscription & Recurring Due Configuration State
+  const [subscriptionConfig, setSubscriptionConfig] = useState({
+    monthlyDueAmount: 5000,
+    dueDayOfMonth: 10,
+    gracePeriodDays: 5,
+    lateFeeType: 'Fixed Daily', // 'Fixed Daily', 'One-Time Flat', 'Percentage'
+    lateFeeAmount: 50,
+    lateFeePercentage: 2,
+    autoSendSmsReminder: true,
+    reminderDaysBeforeDue: 3,
+    applyToExistingMembers: true,
+    updatedAt: '২৫ অক্টোবর ২০২৬'
+  });
+
   // 2. Multi-Merchant SaaS Accounts
   const [merchants, setMerchants] = useState([
     {
@@ -227,6 +241,7 @@ export default function App() {
     { id: 'samity_setup', labelBn: 'সমিতি সেটআপ ও কনফিগারেশন', labelEn: 'Samity Setup & Location', icon: Settings, group: 'core', badge: 'প্রো' },
     { id: 'members', labelBn: 'সদস্য ব্যবস্থাপনা ও প্রোফাইল', labelEn: 'Members Directory', icon: Users, group: 'core', count: members.length },
     { id: 'deposits', labelBn: 'চাঁদা জমা ও মানি রিসিট', labelEn: 'Deposits & Receipts', icon: Wallet, group: 'core' },
+    { id: 'subscription_config', labelBn: 'সাবস্ক্রিপশন ও চাঁদা নিয়মাবলী', labelEn: 'Subscription & Due Rules', icon: Sliders, group: 'finance', badge: 'নিয়ম' },
     { id: 'bulk_deposit', labelBn: 'এক ক্লিকে বাল্ক চাঁদা আদায়', labelEn: 'Bulk Deposit Batch', icon: Zap, group: 'finance' },
     { id: 'due_tracking', labelBn: 'বকেয়া আদায় ও এসএমএস তাগাদা', labelEn: 'Due Tracking & SMS', icon: AlertCircle, group: 'finance', badge: `${totalDueAmount}৳` },
     { id: 'expenses', labelBn: 'অফিস খরচ ও ভাউচার', labelEn: 'Office Expenses', icon: TrendingDown, group: 'finance' },
@@ -902,15 +917,29 @@ export default function App() {
                     </p>
                   </div>
 
-                  <div className="mt-5 pt-4 border-t border-slate-100 flex items-center justify-between">
+                  <div className="mt-5 pt-4 border-t border-slate-100 flex flex-wrap items-center justify-between gap-2">
                     <div>
-                      <span className="text-[11px] text-slate-400 block">{isBn ? "রেজিস্ট্রেশন স্ট্যাটাস" : "Registration Status"}</span>
-                      <span className="text-sm font-bold text-purple-700">{samityConfig.regNo}</span>
+                      <span className="text-[11px] text-slate-400 block">{isBn ? "নির্ধারিত চাঁদা ও শেষ দিন" : "Due Rule & Date"}</span>
+                      <span className="text-sm font-bold text-purple-700">
+                        {Number(subscriptionConfig.monthlyDueAmount).toLocaleString('bn-BD')} ৳ • প্রতি {subscriptionConfig.dueDayOfMonth} তারিখ
+                      </span>
                     </div>
-                    <button className="flex items-center gap-1.5 bg-purple-600 group-hover:bg-purple-700 text-white text-xs font-bold px-3 py-1.5 rounded-xl shadow transition">
-                      <span>{isBn ? "সেটআপ পরিবর্তন" : "Configure"}</span>
-                      <ChevronRight className="w-4 h-4" />
-                    </button>
+                    <div className="flex items-center gap-1.5">
+                      <button
+                        onClick={(e) => { e.stopPropagation(); setActiveTab('subscription_config'); }}
+                        className="flex items-center gap-1 bg-amber-500 hover:bg-amber-600 text-slate-950 text-xs font-bold px-3 py-1.5 rounded-xl shadow transition"
+                      >
+                        <Sliders className="w-3.5 h-3.5" />
+                        <span>{isBn ? "চাঁদা নিয়ম" : "Due Rules"}</span>
+                      </button>
+                      <button
+                        onClick={(e) => { e.stopPropagation(); setActiveTab('samity_setup'); }}
+                        className="flex items-center gap-1 bg-purple-600 hover:bg-purple-700 text-white text-xs font-bold px-3 py-1.5 rounded-xl shadow transition"
+                      >
+                        <span>{isBn ? "সেটআপ" : "Setup"}</span>
+                        <ChevronRight className="w-3.5 h-3.5" />
+                      </button>
+                    </div>
                   </div>
                 </div>
 
@@ -1474,6 +1503,344 @@ export default function App() {
                 <span className="text-2xl font-black text-purple-900">অক্টোবর ২০২৬</span>
               </div>
             </div>
+          </div>
+        )}
+
+        {/* ========================================================
+            TAB: SUBSCRIPTION & DUE RULES CONFIGURATION (Admin Module)
+           ======================================================== */}
+        {activeTab === 'subscription_config' && (
+          <div className="bg-white rounded-2xl border border-slate-200 shadow-sm p-5 sm:p-6 space-y-6 animate-fade-in">
+            {/* Header */}
+            <div className="flex flex-wrap justify-between items-center gap-3 border-b border-slate-200 pb-4">
+              <div className="flex items-center gap-3">
+                <div className="w-12 h-12 rounded-2xl bg-gradient-to-tr from-amber-500 to-amber-600 text-slate-950 flex items-center justify-center font-bold shadow-md">
+                  <Sliders className="w-6 h-6 text-slate-950" />
+                </div>
+                <div>
+                  <h3 className="font-bold text-lg text-slate-900 flex items-center gap-2">
+                    <span>{isBn ? "সাবস্ক্রিপশন ও চাঁদা কনফিগারেশন মডিউল" : "Subscription & Recurring Due Configuration"}</span>
+                    <span className="bg-amber-100 text-amber-800 text-[10px] font-bold px-2 py-0.5 rounded-full">অ্যাডমিন কন্ট্রোল</span>
+                  </h3>
+                  <p className="text-xs text-slate-500">
+                    {isBn
+                      ? "মাসিক নির্ধারিত চাঁদা, পরিশোধের শেষ তারিখ, গ্রেস পিরিয়ড এবং বিলম্ব জরিমানা নিয়ম নির্ধারণ করুন"
+                      : "Set monthly due amounts, due dates, grace period, and late fee rules mirroring Android app."}
+                  </p>
+                </div>
+              </div>
+
+              <div className="flex items-center gap-2">
+                <button
+                  onClick={() => {
+                    const newMonthly = Number(subscriptionConfig.monthlyDueAmount) || 5000;
+                    if (subscriptionConfig.applyToExistingMembers) {
+                      setMembers(members.map(m => {
+                        const newDue = Math.max(0, m.due - m.monthlyFee + newMonthly);
+                        return { ...m, monthlyFee: newMonthly, due: newDue };
+                      }));
+                    }
+                    setSamityConfig({
+                      ...samityConfig,
+                      defaultMonthlyDeposit: newMonthly,
+                      latePenaltyPerDay: Number(subscriptionConfig.lateFeeAmount) || 50
+                    });
+
+                    // Add sync ledger event
+                    const syncVoucher = `CFG-${Date.now().toString().slice(-4)}`;
+                    const configEvent = {
+                      id: `D-${Date.now()}`,
+                      voucher: syncVoucher,
+                      memberCode: "ALL-MEMBERS",
+                      name: "সাবস্ক্রিপশন কনফিগ আপডেট",
+                      amount: newMonthly,
+                      date: new Date().toISOString().split('T')[0],
+                      origin: "ভার্সেল ওয়েব পোর্টাল (Admin)",
+                      method: "সিস্টেম রুলস",
+                      notes: `চাঁদা: ${newMonthly}৳, শেষ দিন: ${subscriptionConfig.dueDayOfMonth} তারিখ, জরিমানা: ${subscriptionConfig.lateFeeAmount}৳`
+                    };
+                    setDeposits([configEvent, ...deposits]);
+
+                    setIsSyncing(true);
+                    setTimeout(() => {
+                      setIsSyncing(false);
+                      setLastSyncTime(new Date().toLocaleTimeString('bn-BD'));
+                      showToast('✅ সাবস্ক্রিপশন কনফিগারেশন সংরক্ষিত হয়েছে এবং মোবাইল ও ওয়েব উভয় পোর্টালে সিঙ্ক সম্পন্ন!');
+                    }, 600);
+                  }}
+                  className="flex items-center gap-2 bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white font-bold px-5 py-2.5 rounded-xl text-xs shadow-md transition transform active:scale-95"
+                >
+                  <Check className="w-4 h-4" />
+                  <span>{isBn ? "নিয়ম সংরক্ষণ ও ক্লাউড সিঙ্ক করুন" : "Save & Sync Rules"}</span>
+                </button>
+              </div>
+            </div>
+
+            {/* Active Policy Status Hero Banner */}
+            <div className="bg-gradient-to-r from-slate-900 via-slate-850 to-slate-900 rounded-xl p-4 text-white flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-xl bg-amber-500/20 border border-amber-500/30 flex items-center justify-center text-amber-400">
+                  <Calendar className="w-5 h-5" />
+                </div>
+                <div>
+                  <div className="text-xs text-slate-400 font-semibold">বর্তমান সক্রিয় সাবস্ক্রিপশন পলিসি</div>
+                  <div className="text-sm font-bold text-amber-300">
+                    মাসিক চাঁদা: {Number(subscriptionConfig.monthlyDueAmount).toLocaleString('bn-BD')} ৳ • প্রতি মাসের {subscriptionConfig.dueDayOfMonth} তারিখ
+                  </div>
+                </div>
+              </div>
+
+              <div className="flex items-center gap-2 bg-emerald-950/80 border border-emerald-500/40 px-3 py-1.5 rounded-lg text-xs text-emerald-300">
+                <span className="w-2 h-2 rounded-full bg-emerald-400 pulse-dot"></span>
+                <span>{syncedDevicesCount}টি অ্যান্ড্রয়েড ডিভাইসে সিঙ্কড</span>
+              </div>
+            </div>
+
+            {/* Main Form 2-Column Grid */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-5 text-xs">
+              
+              {/* Section 1: Monthly Due Amount */}
+              <div className="bg-slate-50 border border-slate-200 rounded-xl p-4 space-y-3">
+                <div className="flex items-center gap-2 text-slate-900 font-bold text-sm">
+                  <Wallet className="w-4 h-4 text-emerald-600" />
+                  <span>১. নির্ধারিত মাসিক চাঁদা ও কিস্তির পরিমাণ</span>
+                </div>
+                <p className="text-[11px] text-slate-500">
+                  সমিতির সকল সাধারণ সদস্যের জন্য প্রযোজ্য স্ট্যান্ডার্ড মাসিক সঞ্চয় বা চাঁদা।
+                </p>
+
+                <div>
+                  <label className="font-semibold text-slate-700 block mb-1">মাসিক চাঁদা (টাকা) *</label>
+                  <div className="relative">
+                    <span className="absolute left-3 top-2.5 font-bold text-slate-500">৳</span>
+                    <input
+                      type="number"
+                      value={subscriptionConfig.monthlyDueAmount}
+                      onChange={(e) => setSubscriptionConfig({ ...subscriptionConfig, monthlyDueAmount: e.target.value })}
+                      className="w-full bg-white border border-slate-300 rounded-xl pl-8 pr-3.5 py-2 font-bold text-slate-900 text-sm focus:ring-2 focus:ring-amber-500"
+                    />
+                  </div>
+                </div>
+
+                {/* Preset Chips */}
+                <div>
+                  <span className="text-[11px] font-semibold text-slate-500 block mb-1.5">দ্রুত নির্বাচন প্রিসেট:</span>
+                  <div className="flex flex-wrap gap-2">
+                    {[1000, 2000, 3000, 5000, 10000].map((amt) => (
+                      <button
+                        key={amt}
+                        type="button"
+                        onClick={() => setSubscriptionConfig({ ...subscriptionConfig, monthlyDueAmount: amt })}
+                        className={`px-2.5 py-1 rounded-lg text-xs font-bold border transition ${
+                          Number(subscriptionConfig.monthlyDueAmount) === amt
+                            ? 'bg-amber-500 text-slate-950 border-amber-600 shadow'
+                            : 'bg-white text-slate-700 border-slate-300 hover:bg-slate-100'
+                        }`}
+                      >
+                        {amt.toLocaleString('bn-BD')}৳
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Apply to existing members toggle */}
+                <label className="flex items-start gap-2.5 pt-2 border-t border-slate-200 cursor-pointer">
+                  <input
+                    type="checkbox"
+                    checked={subscriptionConfig.applyToExistingMembers}
+                    onChange={(e) => setSubscriptionConfig({ ...subscriptionConfig, applyToExistingMembers: e.target.checked })}
+                    className="rounded border-slate-300 text-amber-500 focus:ring-amber-400 mt-0.5"
+                  />
+                  <div>
+                    <span className="font-bold text-slate-800 block">সকল বিদ্যমান সদস্যদের চাঁদা স্বয়ংক্রিয়ভাবে আপডেট করুন</span>
+                    <span className="text-[11px] text-slate-500">বর্তমানে সক্রিয় {members.length} জন সদস্যের ডিফল্ট মাসিক ফি এবং বকেয়া পুনর্গণনা হবে।</span>
+                  </div>
+                </label>
+              </div>
+
+              {/* Section 2: Due Date & Grace Period */}
+              <div className="bg-slate-50 border border-slate-200 rounded-xl p-4 space-y-3">
+                <div className="flex items-center gap-2 text-slate-900 font-bold text-sm">
+                  <Calendar className="w-4 h-4 text-blue-600" />
+                  <span>২. পরিশোধের শেষ তারিখ ও গ্রেস পিরিয়ড</span>
+                </div>
+                <p className="text-[11px] text-slate-500">
+                  প্রতি মাসের নির্ধারিত দিন যার মধ্যে চাঁদা দিতে হবে এবং বিলম্বের অতিরিক্ত শিথিল দিন।
+                </p>
+
+                <div className="grid grid-cols-2 gap-3">
+                  <div>
+                    <label className="font-semibold text-slate-700 block mb-1">শেষ তারিখ (১-৩১ দিন) *</label>
+                    <input
+                      type="number"
+                      min="1"
+                      max="31"
+                      value={subscriptionConfig.dueDayOfMonth}
+                      onChange={(e) => setSubscriptionConfig({ ...subscriptionConfig, dueDayOfMonth: Number(e.target.value) })}
+                      className="w-full bg-white border border-slate-300 rounded-xl px-3.5 py-2 font-bold text-slate-900 text-sm focus:ring-2 focus:ring-amber-500"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="font-semibold text-slate-700 block mb-1">গ্রেস পিরিয়ড (দিন) *</label>
+                    <input
+                      type="number"
+                      min="0"
+                      max="30"
+                      value={subscriptionConfig.gracePeriodDays}
+                      onChange={(e) => setSubscriptionConfig({ ...subscriptionConfig, gracePeriodDays: Number(e.target.value) })}
+                      className="w-full bg-white border border-slate-300 rounded-xl px-3.5 py-2 font-bold text-slate-900 text-sm focus:ring-2 focus:ring-amber-500"
+                    />
+                  </div>
+                </div>
+
+                <div className="bg-blue-50 border border-blue-200 rounded-lg p-3 text-[11px] text-blue-900 flex items-start gap-2">
+                  <AlertCircle className="w-4 h-4 text-blue-600 flex-shrink-0 mt-0.5" />
+                  <div>
+                    প্রতি মাসের <strong>{subscriptionConfig.dueDayOfMonth} তারিখ</strong> শেষ দিন। পরবর্তী <strong>{subscriptionConfig.gracePeriodDays} দিন</strong> গ্রেস পিরিয়ড চলাকালীন কোনো জরিমানা ধার্য হবে না।
+                  </div>
+                </div>
+              </div>
+
+              {/* Section 3: Late Fee Rules */}
+              <div className="bg-slate-50 border border-slate-200 rounded-xl p-4 space-y-3">
+                <div className="flex items-center gap-2 text-slate-900 font-bold text-sm">
+                  <Clock className="w-4 h-4 text-amber-600" />
+                  <span>৩. বিলম্ব জরিমানা ও পেনাল্টি রুলস</span>
+                </div>
+                <p className="text-[11px] text-slate-500">
+                  গ্রেস পিরিয়ড পার হওয়ার পর বকেয়ার বিপরীতে জরিমানা হিসাব করার নিয়ম।
+                </p>
+
+                {/* Rule Type Selector */}
+                <div>
+                  <span className="font-semibold text-slate-700 block mb-1.5">জরিমানার ধরন:</span>
+                  <div className="grid grid-cols-3 gap-2">
+                    {[
+                      { id: 'Fixed Daily', labelBn: 'দৈনিক ফি' },
+                      { id: 'One-Time Flat', labelBn: 'এককালীন ফি' },
+                      { id: 'Percentage', labelBn: 'শতকরা হার' }
+                    ].map((type) => (
+                      <button
+                        key={type.id}
+                        type="button"
+                        onClick={() => setSubscriptionConfig({ ...subscriptionConfig, lateFeeType: type.id })}
+                        className={`py-1.5 px-2 rounded-lg text-xs font-bold border transition text-center ${
+                          subscriptionConfig.lateFeeType === type.id
+                            ? 'bg-amber-500 text-slate-950 border-amber-600 shadow-sm'
+                            : 'bg-white text-slate-700 border-slate-300 hover:bg-slate-100'
+                        }`}
+                      >
+                        {type.labelBn}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                {subscriptionConfig.lateFeeType === 'Percentage' ? (
+                  <div>
+                    <label className="font-semibold text-slate-700 block mb-1">জরিমানা শতকরা হার (%)</label>
+                    <div className="relative">
+                      <input
+                        type="number"
+                        value={subscriptionConfig.lateFeePercentage}
+                        onChange={(e) => setSubscriptionConfig({ ...subscriptionConfig, lateFeePercentage: Number(e.target.value) })}
+                        className="w-full bg-white border border-slate-300 rounded-xl px-3.5 py-2 font-bold text-slate-900 text-sm"
+                      />
+                      <span className="absolute right-3.5 top-2.5 font-bold text-slate-500">%</span>
+                    </div>
+                  </div>
+                ) : (
+                  <div>
+                    <label className="font-semibold text-slate-700 block mb-1">
+                      {subscriptionConfig.lateFeeType === 'Fixed Daily' ? 'প্রতিদিনের বিলম্ব ফি (টাকা/দিন)' : 'এককালীন জরিমানা (টাকা)'}
+                    </label>
+                    <div className="relative">
+                      <span className="absolute left-3 top-2.5 font-bold text-slate-500">৳</span>
+                      <input
+                        type="number"
+                        value={subscriptionConfig.lateFeeAmount}
+                        onChange={(e) => setSubscriptionConfig({ ...subscriptionConfig, lateFeeAmount: Number(e.target.value) })}
+                        className="w-full bg-white border border-slate-300 rounded-xl pl-8 pr-3.5 py-2 font-bold text-slate-900 text-sm"
+                      />
+                    </div>
+                  </div>
+                )}
+              </div>
+
+              {/* Section 4: Automated Reminders */}
+              <div className="bg-slate-50 border border-slate-200 rounded-xl p-4 space-y-3">
+                <div className="flex items-center gap-2 text-slate-900 font-bold text-sm">
+                  <Send className="w-4 h-4 text-purple-600" />
+                  <span>৪. স্বয়ংক্রিয় নোটিফিকেশন ও এসএমএস অ্যালার্ট</span>
+                </div>
+                <p className="text-[11px] text-slate-500">
+                  নির্ধারিত তারিখের পূর্বে সদস্যদের মোবাইলে অটোমেটিক এসএমএস তাগাদা পাঠানো।
+                </p>
+
+                <label className="flex items-start gap-2.5 p-2 bg-white rounded-xl border border-slate-200 cursor-pointer">
+                  <input
+                    type="checkbox"
+                    checked={subscriptionConfig.autoSendSmsReminder}
+                    onChange={(e) => setSubscriptionConfig({ ...subscriptionConfig, autoSendSmsReminder: e.target.checked })}
+                    className="rounded border-slate-300 text-purple-600 focus:ring-purple-500 mt-1"
+                  />
+                  <div>
+                    <span className="font-bold text-slate-800 block">স্বয়ংক্রিয় এসএমএস রিমাইন্ডার সক্রিয়</span>
+                    <span className="text-[11px] text-slate-500">প্রতি মাসের শেষ দিনের ৩ দিন আগে এবং গ্রেস পিরিয়ড শেষ হলে বকেয়া নোটিশ প্রেরণ।</span>
+                  </div>
+                </label>
+
+                <div className="bg-purple-50 border border-purple-200 rounded-lg p-2.5 text-[11px] text-purple-900">
+                  <span className="font-bold">এসএমএস প্রিভিউ:</span> "সম্মানিত সদস্য, আপনার সমিতির অক্টোবর মাসের {Number(subscriptionConfig.monthlyDueAmount).toLocaleString('bn-BD')} ৳ চাঁদা পরিশোধের শেষ তারিখ {subscriptionConfig.dueDayOfMonth} তারিখ। বিলম্ব এড়াতে পরিশোধ করুন।"
+                </div>
+              </div>
+
+            </div>
+
+            {/* Live Calculation Simulation Card */}
+            <div className="bg-gradient-to-br from-amber-50 to-orange-50 border-2 border-amber-300/80 rounded-2xl p-5 space-y-3">
+              <div className="flex items-center gap-2 text-amber-900 font-bold text-sm">
+                <Sparkles className="w-4 h-4 text-amber-600" />
+                <span>💡 লাইভ ক্যালকুলেশন প্রিভিউ (সদস্যের বিলম্ব হিসাব উদাহরণ)</span>
+              </div>
+              <p className="text-xs text-amber-800">
+                ধরা যাক, একজন সদস্য গ্রেস পিরিয়ড পার হওয়ার পর ১০ দিন বিলম্বে চাঁদা পরিশোধ করছেন:
+              </p>
+
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 text-xs pt-1">
+                <div className="bg-white/80 p-3 rounded-xl border border-amber-200">
+                  <span className="text-slate-500 block">মূল মাসিক চাঁদা</span>
+                  <span className="text-base font-bold text-slate-900">{Number(subscriptionConfig.monthlyDueAmount).toLocaleString('bn-BD')} ৳</span>
+                </div>
+
+                <div className="bg-white/80 p-3 rounded-xl border border-amber-200">
+                  <span className="text-amber-800 font-semibold block">বিলম্ব জরিমানা ({subscriptionConfig.lateFeeType})</span>
+                  <span className="text-base font-bold text-amber-700">
+                    + {subscriptionConfig.lateFeeType === 'Percentage'
+                        ? (Number(subscriptionConfig.monthlyDueAmount) * (subscriptionConfig.lateFeePercentage / 100)).toLocaleString('bn-BD')
+                        : subscriptionConfig.lateFeeType === 'One-Time Flat'
+                        ? Number(subscriptionConfig.lateFeeAmount).toLocaleString('bn-BD')
+                        : (10 * Number(subscriptionConfig.lateFeeAmount)).toLocaleString('bn-BD')} ৳
+                  </span>
+                </div>
+
+                <div className="bg-amber-100 p-3 rounded-xl border border-amber-300 font-bold">
+                  <span className="text-amber-900 block">মোট প্রদেয় রিসিট</span>
+                  <span className="text-base font-black text-amber-950">
+                    {(
+                      Number(subscriptionConfig.monthlyDueAmount) +
+                      (subscriptionConfig.lateFeeType === 'Percentage'
+                        ? Number(subscriptionConfig.monthlyDueAmount) * (subscriptionConfig.lateFeePercentage / 100)
+                        : subscriptionConfig.lateFeeType === 'One-Time Flat'
+                        ? Number(subscriptionConfig.lateFeeAmount)
+                        : 10 * Number(subscriptionConfig.lateFeeAmount))
+                    ).toLocaleString('bn-BD')} ৳
+                  </span>
+                </div>
+              </div>
+            </div>
+
           </div>
         )}
 

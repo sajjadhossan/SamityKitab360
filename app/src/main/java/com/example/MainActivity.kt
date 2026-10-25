@@ -65,6 +65,7 @@ sealed class Screen {
     object ApprovalWorkflow : Screen()
     object BackupExport : Screen()
     object Settings : Screen()
+    object SubscriptionConfig : Screen()
     data class ReceiptView(val deposit: Deposit) : Screen()
     data class DueNoticeView(val member: Member) : Screen()
 }
@@ -354,6 +355,18 @@ fun MainAppContent(repository: SamityRepository) {
                     )
 
                     DrawerItem(
+                        title = if (isBn) "সাবস্ক্রিপশন ও চাঁদা কনফিগারেশন" else "Subscription Config",
+                        icon = Icons.Default.EventRepeat,
+                        selected = currentScreen is Screen.SubscriptionConfig,
+                        badgeText = "নিয়ম",
+                        iconColor = SamityGold,
+                        onClick = {
+                            currentScreen = Screen.SubscriptionConfig
+                            coroutineScope.launch { drawerState.close() }
+                        }
+                    )
+
+                    DrawerItem(
                         title = if (isBn) "লেটারহেড ও প্যাড সেটিংস" else "Letterhead Settings",
                         icon = Icons.Default.Description,
                         selected = currentScreen is Screen.Letterhead,
@@ -553,6 +566,7 @@ fun MainAppContent(repository: SamityRepository) {
                         is Screen.ApprovalWorkflow -> if (isBn) "অনুমোদন ওয়ার্কফ্লো" else "Approvals"
                         is Screen.BackupExport -> if (isBn) "ব্যাকআপ ও এক্সপোর্ট" else "Backup"
                         is Screen.Settings -> if (isBn) "সিস্টেম সেটিংস" else "Settings"
+                        is Screen.SubscriptionConfig -> if (isBn) "সাবস্ক্রিপশন নিয়ম" else "Subscription Rules"
                         is Screen.ReceiptView -> if (isBn) "জমা মানিসিপ্ট" else "Receipt"
                         is Screen.DueNoticeView -> if (isBn) "বকেয়া নোটিশ" else "Due Notice"
                         else -> null
@@ -570,7 +584,8 @@ fun MainAppContent(repository: SamityRepository) {
                 currentScreen !is Screen.VercelCloudSync &&
                 currentScreen !is Screen.ApprovalWorkflow &&
                 currentScreen !is Screen.BackupExport &&
-                currentScreen !is Screen.Settings
+                currentScreen !is Screen.Settings &&
+                currentScreen !is Screen.SubscriptionConfig
             ) {
                 NavigationBar(
                     containerColor = Color.White,
@@ -713,6 +728,7 @@ fun MainAppContent(repository: SamityRepository) {
                                 onNavigateToApprovalWorkflow = { currentScreen = Screen.ApprovalWorkflow },
                                 onNavigateToBackupExport = { currentScreen = Screen.BackupExport },
                                 onNavigateToSettings = { currentScreen = Screen.Settings },
+                                onNavigateToSubscriptionConfig = { currentScreen = Screen.SubscriptionConfig },
                                 onViewReceipt = { dep -> currentScreen = Screen.ReceiptView(dep) },
                                 onNavigateToVercelSync = { currentScreen = Screen.VercelCloudSync }
                             )
@@ -1013,8 +1029,24 @@ fun MainAppContent(repository: SamityRepository) {
                         onNavigateToBackup = { currentScreen = Screen.BackupExport },
                         onNavigateToVercelSync = { currentScreen = Screen.VercelCloudSync },
                         onNavigateToRoles = { currentScreen = Screen.RolePermissionManager },
-                        onNavigateToApprovals = { currentScreen = Screen.ApprovalWorkflow }
+                        onNavigateToApprovals = { currentScreen = Screen.ApprovalWorkflow },
+                        onNavigateToSubscriptionConfig = { currentScreen = Screen.SubscriptionConfig }
                     )
+                }
+
+                is Screen.SubscriptionConfig -> {
+                    AuthorizedScreen(
+                        requiredPermission = AppPermission.MANAGE_SAMITY_CONFIG,
+                        userSession = repository.userSession,
+                        targetSamityId = repository.activeSamityId,
+                        onNavigateBack = { currentScreen = Screen.Dashboard },
+                        onSwitchRole = { repository.switchRole(it) }
+                    ) {
+                        SubscriptionConfigScreen(
+                            repository = repository,
+                            onBack = { currentScreen = Screen.Dashboard }
+                        )
+                    }
                 }
         }
     }
