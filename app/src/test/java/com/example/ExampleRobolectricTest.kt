@@ -631,4 +631,66 @@ class ExampleRobolectricTest {
         val latestLog = gateway.cloudSyncAuditLogs.first()
         assertTrue(latestLog.detailsBn.contains("১০,০০০"))
     }
+
+    @Test
+    fun `verify samity setup module creation, updating, and bilingual validation`() {
+        val repository = SamityRepository()
+        val initialCount = repository.samities.size
+
+        // Test bilingual regex and mobile regex
+        val bengaliRegex = Regex("[\\u0980-\\u09FF]")
+        val englishRegex = Regex("^[a-zA-Z0-9\\s.,&'()-]+$")
+        val bdPhoneRegex = Regex("^(?:\\+?8801|01)[3-9]\\d{8}$")
+
+        val validBnName = "উত্তরা প্রগতি সমবায় সমিতি"
+        val invalidBnName = "Uttara Pragati Samity"
+        assertTrue(bengaliRegex.containsMatchIn(validBnName))
+        assertFalse(bengaliRegex.containsMatchIn(invalidBnName))
+
+        val validEnName = "Uttara Pragati Cooperative Society"
+        val invalidEnName = "উত্তরা প্রগতি"
+        assertTrue(englishRegex.matches(validEnName))
+        assertFalse(englishRegex.matches(invalidEnName))
+
+        val validMobile = "01712345678"
+        val invalidMobile = "0123456789"
+        assertTrue(bdPhoneRegex.matches(validMobile))
+        assertFalse(bdPhoneRegex.matches(invalidMobile))
+
+        // Create new Samity with full location hierarchy and banking details
+        val newSamity = com.example.data.model.Samity(
+            id = "samity_test_setup_99",
+            nameBn = validBnName,
+            nameEn = validEnName,
+            samityType = "Savings Samity",
+            division = "ঢাকা",
+            district = "ঢাকা",
+            upazila = "উত্তরা",
+            postOffice = "উত্তরা-১২৩০",
+            addressBn = "রোড # ৭, সেক্টর # ৩, উত্তরা, ঢাকা",
+            mobileNumber = validMobile,
+            email = "info@uttarasamity.org",
+            defaultMonthlyFee = 3000.0,
+            dueDayOfMonth = 15,
+            status = "Active"
+        )
+
+        val created = repository.createSamity(newSamity)
+        assertTrue("Samity creation should succeed for Super Admin", created)
+        assertEquals(initialCount + 1, repository.samities.size)
+        assertEquals("samity_test_setup_99", repository.activeSamityId)
+        assertEquals("উত্তরা প্রগতি সমবায় সমিতি", repository.activeSamity.nameBn)
+
+        // Update Samity details
+        val updatedSamity = newSamity.copy(
+            nameBn = "উত্তরা প্রগতি সঞ্চয় ও ঋণদান সমবায় সমিতি",
+            defaultMonthlyFee = 3500.0,
+            dueDayOfMonth = 20
+        )
+        val updated = repository.updateSamity(updatedSamity)
+        assertTrue("Samity update should succeed", updated)
+        assertEquals("উত্তরা প্রগতি সঞ্চয় ও ঋণদান সমবায় সমিতি", repository.activeSamity.nameBn)
+        assertEquals(3500.0, repository.activeSamity.defaultMonthlyFee, 0.01)
+        assertEquals(20, repository.activeSamity.dueDayOfMonth)
+    }
 }

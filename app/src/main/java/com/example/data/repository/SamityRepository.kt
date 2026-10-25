@@ -761,6 +761,29 @@ class SamityRepository(
         return true
     }
 
+    // Samity Update with Authorization Check
+    fun updateSamity(updatedSamity: Samity): Boolean {
+        if (!userSession.canPerform(AppPermission.MANAGE_SAMITY_CONFIG)) {
+            addSecurityAudit(
+                actionBn = "অননুমোদিত সমিতি আপডেট প্রচেষ্টা",
+                actionEn = "Unauthorized Samity Update Blocked",
+                details = "Role ${userSession.currentUserRole} lacks MANAGE_SAMITY_CONFIG permission"
+            )
+            return false
+        }
+        val index = samities.indexOfFirst { it.id == updatedSamity.id }
+        if (index != -1) {
+            samities[index] = updatedSamity
+            addAudit(
+                actionBn = "সমিতি প্রোফাইল ও তথ্য আপডেট",
+                actionEn = "Updated Samity Profile & Info",
+                details = "Samity: ${updatedSamity.nameBn} (${updatedSamity.nameEn})"
+            )
+            return true
+        }
+        return false
+    }
+
 
 
     // Super Admin updates commercial license & feature flags per client
