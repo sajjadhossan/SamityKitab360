@@ -418,6 +418,157 @@ fun VercelCloudSyncScreen(
                 }
             }
 
+            // Room SQLite ⇄ Firebase Firestore Cloud Synchronization Card
+            item {
+                Card(
+                    shape = RoundedCornerShape(12.dp),
+                    colors = CardDefaults.cardColors(containerColor = Color.White),
+                    border = BorderStroke(1.dp, Color(0xFFE2E8F0)),
+                    elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
+                ) {
+                    Column(modifier = Modifier.padding(16.dp)) {
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.SpaceBetween,
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Row(verticalAlignment = Alignment.CenterVertically) {
+                                Box(
+                                    modifier = Modifier
+                                        .size(32.dp)
+                                        .clip(CircleShape)
+                                        .background(Color(0xFFFEF3C7)),
+                                    contentAlignment = Alignment.Center
+                                ) {
+                                    Icon(
+                                        Icons.Default.Storage,
+                                        contentDescription = null,
+                                        tint = Color(0xFFD97706),
+                                        modifier = Modifier.size(18.dp)
+                                    )
+                                }
+                                Spacer(modifier = Modifier.width(10.dp))
+                                Column {
+                                    Text(
+                                        text = if (isBn) "রুম ডাটাবেজ ⇄ ফায়ারবেস ক্লাউড সিঙ্ক" else "Room SQLite ⇄ Firestore Cloud Sync",
+                                        fontWeight = FontWeight.Bold,
+                                        fontSize = 13.sp,
+                                        color = SamityNavyDark
+                                    )
+                                    Text(
+                                        text = if (isBn) "লোকাল মোবাইল ডাটাবেজ ও ক্লাউড পারসিস্টেন্স" else "On-device persistence & cloud consistency",
+                                        fontSize = 11.sp,
+                                        color = Color(0xFF64748B)
+                                    )
+                                }
+                            }
+
+                            Surface(
+                                shape = RoundedCornerShape(6.dp),
+                                color = Color(0xFFECFDF5)
+                            ) {
+                                Text(
+                                    text = if (isBn) "সক্রিয়" else "Active",
+                                    color = Color(0xFF059669),
+                                    fontWeight = FontWeight.Bold,
+                                    fontSize = 10.sp,
+                                    modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp)
+                                )
+                            }
+                        }
+
+                        Spacer(modifier = Modifier.height(12.dp))
+
+                        // Stats Summary Row
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.spacedBy(8.dp)
+                        ) {
+                            Card(
+                                colors = CardDefaults.cardColors(containerColor = Color(0xFFF1F5F9)),
+                                modifier = Modifier.weight(1f)
+                            ) {
+                                Column(modifier = Modifier.padding(8.dp)) {
+                                    Text(
+                                        text = if (isBn) "রুম সদস্য" else "Room Members",
+                                        fontSize = 10.sp,
+                                        color = Color(0xFF64748B)
+                                    )
+                                    Text(
+                                        text = "${repository.roomFirestoreSync?.totalLocalMembersCount ?: localMembers.size} জন",
+                                        fontWeight = FontWeight.Bold,
+                                        fontSize = 13.sp,
+                                        color = SamityNavyDark
+                                    )
+                                }
+                            }
+
+                            Card(
+                                colors = CardDefaults.cardColors(containerColor = Color(0xFFF1F5F9)),
+                                modifier = Modifier.weight(1f)
+                            ) {
+                                Column(modifier = Modifier.padding(8.dp)) {
+                                    Text(
+                                        text = if (isBn) "রুম মোট চাঁদা" else "Room Deposits",
+                                        fontSize = 10.sp,
+                                        color = Color(0xFF64748B)
+                                    )
+                                    Text(
+                                        text = "${(repository.roomFirestoreSync?.totalLocalDepositsSum ?: localDepositSum).toInt()} ৳",
+                                        fontWeight = FontWeight.Bold,
+                                        fontSize = 13.sp,
+                                        color = Color(0xFF15803D)
+                                    )
+                                }
+                            }
+
+                            Card(
+                                colors = CardDefaults.cardColors(containerColor = Color(0xFFF1F5F9)),
+                                modifier = Modifier.weight(1f)
+                            ) {
+                                Column(modifier = Modifier.padding(8.dp)) {
+                                    Text(
+                                        text = if (isBn) "ক্লাউড স্ট্যাটাস" else "Cloud Status",
+                                        fontSize = 10.sp,
+                                        color = Color(0xFF64748B)
+                                    )
+                                    Text(
+                                        text = if (repository.roomFirestoreSync?.isCloudConnected == true) "অনলাইন" else "রুম সিঙ্কড",
+                                        fontWeight = FontWeight.Bold,
+                                        fontSize = 13.sp,
+                                        color = Color(0xFF2563EB)
+                                    )
+                                }
+                            }
+                        }
+
+                        Spacer(modifier = Modifier.height(12.dp))
+
+                        // Full Sync Button
+                        Button(
+                            onClick = {
+                                repository.syncWithFirestore { success, msg ->
+                                    actionMessage = msg
+                                }
+                            },
+                            shape = RoundedCornerShape(8.dp),
+                            colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF0F766E)),
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .testTag("run_room_firestore_sync_btn")
+                        ) {
+                            Icon(Icons.Default.CloudSync, contentDescription = null, modifier = Modifier.size(16.dp))
+                            Spacer(modifier = Modifier.width(6.dp))
+                            Text(
+                                text = if (isBn) "রুম ও ফায়ারবেস সম্পূর্ণ সিঙ্ক করুন" else "Run Room & Firestore Full Sync",
+                                fontWeight = FontWeight.Bold,
+                                fontSize = 12.sp
+                            )
+                        }
+                    }
+                }
+            }
+
             // Vercel Live Web Portal Launcher Card
             item {
                 Card(

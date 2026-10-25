@@ -7,7 +7,14 @@ import androidx.compose.runtime.setValue
 import com.example.data.auth.*
 import com.example.data.model.*
 import com.example.data.sync.RealtimeSyncManager
+import com.example.data.sync.RoomFirestoreSyncService
 import com.example.data.sync.VercelSyncGateway
+import com.example.data.local.room.DepositEntity
+import com.example.data.local.room.MemberEntity
+import com.example.data.local.room.SamityRoomDatabase
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
 import java.text.SimpleDateFormat
 import java.util.*
 
@@ -20,6 +27,20 @@ class SamityRepository(
     val rbacWrapper = RbacWrapper(userSession = userSession)
     val syncEngine = RealtimeSyncManager()
     val vercelGateway = VercelSyncGateway(syncEngine)
+
+    // Room-to-Firestore Cloud Synchronization Service
+    val roomFirestoreSync: RoomFirestoreSyncService? = sessionManager.context?.let { ctx ->
+        try {
+            val db = SamityRoomDatabase.getInstance(ctx)
+            RoomFirestoreSyncService(
+                memberDao = db.memberDao(),
+                depositDao = db.depositDao(),
+                vercelGateway = vercelGateway
+            )
+        } catch (_: Throwable) {
+            null
+        }
+    }
 
     // Current Active Tenant & User Context (bound directly to UserSessionManager)
     var activeSamityId: String
@@ -58,6 +79,47 @@ class SamityRepository(
 
     init {
         seedInitialData()
+        seedRoomDatabase()
+    }
+
+    private fun seedRoomDatabase() {
+        roomFirestoreSync?.let { sync ->
+            CoroutineScope(Dispatchers.IO).launch {
+                try {
+                    for (m in members) {
+                        sync.saveAndSyncMember(
+                            MemberEntity(
+                                id = m.id,
+                                samityId = m.samityId,
+                                memberCode = m.memberCode,
+                                nameBn = m.nameBn,
+                                nameEn = m.nameEn,
+                                phone = m.phone,
+                                monthlyFee = m.monthlyFee,
+                                totalPaid = m.totalPaid,
+                                totalDue = m.totalDue,
+                                status = m.status
+                            )
+                        )
+                    }
+                    for (d in deposits) {
+                        sync.saveAndSyncDeposit(
+                            DepositEntity(
+                                id = d.id,
+                                samityId = d.samityId,
+                                voucherNo = d.voucherNo,
+                                memberId = d.memberId,
+                                memberName = d.memberName,
+                                amount = d.amount,
+                                depositDate = d.depositDate,
+                                depositMethod = d.depositMethod,
+                                approvalStatus = d.approvalStatus
+                            )
+                        )
+                    }
+                } catch (_: Throwable) {}
+            }
+        }
     }
 
     // =========================================================================
@@ -265,6 +327,23 @@ class SamityRepository(
             return false
         }
         members.add(0, member)
+        roomFirestoreSync?.let { sync ->
+            CoroutineScope(Dispatchers.IO).launch {
+                val entity = MemberEntity(
+                    id = member.id,
+                    samityId = member.samityId,
+                    memberCode = member.memberCode,
+                    nameBn = member.nameBn,
+                    nameEn = member.nameEn,
+                    phone = member.phone,
+                    monthlyFee = member.monthlyFee,
+                    totalPaid = member.totalPaid,
+                    totalDue = member.totalDue,
+                    status = member.status
+                )
+                sync.saveAndSyncMember(entity)
+            }
+        }
         addAudit(
             actionBn = "নতুন সদস্য তৈরি",
             actionEn = "Added New Member",
@@ -324,6 +403,23 @@ class SamityRepository(
             deposit = deposit,
             originDevice = "${userSession.currentUser.name} (${userSession.currentUserRole.titleBn})"
         )
+        // Room SQLite & Firestore Cloud Persistence
+        roomFirestoreSync?.let { sync ->
+            CoroutineScope(Dispatchers.IO).launch {
+                val entity = DepositEntity(
+                    id = deposit.id,
+                    samityId = deposit.samityId,
+                    voucherNo = deposit.voucherNo,
+                    memberId = deposit.memberId,
+                    memberName = deposit.memberName,
+                    amount = deposit.amount,
+                    depositDate = deposit.depositDate,
+                    depositMethod = deposit.depositMethod,
+                    approvalStatus = deposit.approvalStatus
+                )
+                sync.saveAndSyncDeposit(entity)
+            }
+        }
         addAudit(
             actionBn = "ব্যাংক জমা এন্ট্রি (রিয়েল-টাইম সিঙ্কড)",
             actionEn = "Recorded Deposit (Real-Time Synced)",
@@ -762,15 +858,43 @@ class SamityRepository(
     }
 
     /**
+     * Bidirectional Room SQLite <-> Firebase Firestore Cloud <-> Vercel Web Portal Synchronization.
+     */
+    fun syncWithFirestore(onComplete: (Boolean, String) -> Unit = { _, _ -> }) {
+        val sync = roomFirestoreSync
+        if (sync == null) {
+            scanAndSyncWithVercel(onComplete)
+            return
+        }
+
+        CoroutineScope(Dispatchers.Main).launch {
+            val result = sync.syncAll(activeSamityId)
+            addAudit(
+                actionBn = "রুম-টু-ফায়ারবেস ক্লাউড সিঙ্ক",
+                actionEn = "Room-to-Firestore Cloud Sync",
+                details = result.messageBn
+            )
+            onComplete(result.success, result.messageBn)
+        }
+    }
+
+    /**
      * Broadcasts a 10,000 Tk deposit across Vercel web and all mobile devices.
      */
     fun sync10kWithVercel(): Deposit? {
-        val dep = simulateCrossDevicePayment(
-            amount = 10000.0,
-            originDevice = "ভার্সেল ক্লাউড ওয়েব পোর্টাল (Live Web Sync)"
-        )
-        if (dep != null) {
-            vercelGateway.cloudDepositTotal += 10000.0
+        val dep = vercelGateway.sync10kDepositCrossPlatform()
+        deposits.add(0, dep)
+        val memIndex = members.indexOfFirst { it.memberCode == dep.memberCode }
+        if (memIndex != -1) {
+            val current = members[memIndex]
+            val newTotalPaid = current.totalPaid + dep.amount
+            val newDue = (current.totalDue - dep.amount).coerceAtLeast(0.0)
+            val newMonthPaid = current.currentMonthPaid + dep.amount
+            members[memIndex] = current.copy(
+                totalPaid = newTotalPaid,
+                totalDue = newDue,
+                currentMonthPaid = newMonthPaid
+            )
         }
         return dep
     }

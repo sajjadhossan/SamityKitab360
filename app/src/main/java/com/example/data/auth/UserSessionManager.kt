@@ -22,7 +22,7 @@ import java.util.UUID
  * with the RBAC system to enforce multi-tenant isolation.
  */
 class UserSessionManager(
-    private val context: Context? = null,
+    val context: Context? = null,
     defaultUserId: String = "user_admin",
     defaultRole: UserRole = UserRole.SUPER_ADMIN,
     defaultSamityId: String = "samity_1",
