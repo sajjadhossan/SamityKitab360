@@ -1,11 +1,57 @@
-<div align="center">
+# সমিতি কিতাব ৩৬০ (Samity Kitab 360)
+### পূর্ণাঙ্গ কমার্শিয়াল মাল্টি-টেন্যান্ট সমবায় সমিতি ও ব্যবসায়ী ম্যানেজমেন্ট ইআরপি (অ্যান্ড্রয়েড অ্যাপ + ভার্সেল ক্লাউড ওয়েব পোর্টাল)
 
-<img width="1200" height="475" alt="GHBanner" src="https://github.com/user-attachments/assets/0aa67016-6eaf-458a-adb2-6e31a0763ed6" />
+---
 
-  <h1>Built with AI Studio</h2>
+## 🌟 মূল বৈশিষ্ট্যসমূহ (Core Features)
 
-  <p>The fastest path from prompt to production with Gemini.</p>
+1. **সুপার অ্যাডমিন প্ল্যাটফর্ম ও সফটওয়্যার সেলস পোর্টাল (SaaS Control):**
+   - সফটওয়্যার বিক্রেতা (Super Admin) দেখতে পারেন কয়টা ব্যবসায়ী/সমিতি একাউন্ট আছে, কয়টা সক্রিয় (Active) আছে।
+   - লাইসেন্সের মেয়াদ (Validity Days Remaining) কতদিন বাকি আছে তা ট্র্যাক করা যায়।
+   - গ্রাহক ব্যবসায়ীর সদস্য সংখ্যা (Member Count) দেখা যায়, কিন্তু **প্রাইভেসি গার্ড** বিধির কারণে ক্লায়েন্ট সমিতির সদস্যদের ব্যক্তিগত প্রোফাইল দেখতে পারেন না।
+   - তবে সুপার অ্যাডমিন যদি নিজেই কোনো সমিতি পরিচালনা করেন (`isOwnedBySuperAdmin = true`), তবে তিনি সকল তথ্য ও সদস্য প্রোফাইল সরাসরি দেখতে পারেন।
 
-  <a href="https://aistudio.google.com/apps">Start building</a>
+2. **রিয়েল-টাইম মাল্টি-ডিভাইস ডাটা সিঙ্ক (Real-Time Sync Engine):**
+   - যেকোনো একজন সদস্য বা কোষাধ্যক্ষ যখন কোনো মোবাইল থেকে **১০,০০০ টাকা চাঁদা** বা ট্রানজেকশন যুক্ত করেন, সাথে সাথে কানেক্টেড সকল মোবাইল ও পিওএস টার্মিনালে ডাটা স্ক্যান হয়ে ১০০% সেম টু সেম আপডেট হয়ে যায়।
+   - শীর্ষবারে লাইভ নোটিফিকেশন ব্যানার এবং গ্রিন সিঙ্ক ব্যাজ (`🟢 ৪টি ডিভাইস সিঙ্কড`) সার্বক্ষণিক সক্রিয় থাকে।
 
-</div>
+3. **ভার্সেল ক্লাউড ও ওয়েব পোর্টাল সিঙ্ক হাব (Vercel Web App Parity):**
+   - রিপোজিটরির `web/` ফোল্ডারে সম্পূর্ণ প্রোডাকশন-রেডি React/Vite ওয়েব পোর্টাল ও Vercel Serverless Function (`/api/sync`) তৈরি করা আছে।
+   - মোবাইল অ্যাপের ডাটা এবং ভার্সেল ওয়েবসাইটের ডাটা একে অপরের সাথে স্ক্যান করে সর্বদা **১০০% সেম টু সেম** ডাটা বজায় রাখে (Zero Discrepancy)।
+
+---
+
+## 🚀 GitHub আপলোড ও Vercel ১-ক্লিক ডিপ্লয়মেন্ট গাইড
+
+### ধাপ ১: GitHub-এ রিপোজিটরি আপলোড করুন
+টার্মিনালে নিচের কমান্ডগুলো চালান:
+
+```bash
+git init
+git add .
+git commit -m "Initial release: Samity Kitab 360 Android & Vercel Web ERP"
+git branch -M main
+git remote add origin https://github.com/<YOUR_GITHUB_USERNAME>/<YOUR_REPOSITORY_NAME>.git
+git push -u origin main
+```
+
+### ধাপ ২: Vercel-এ ১-ক্লিকে ওয়েবসাইট ডিপ্লয় করুন
+1. [vercel.com](https://vercel.com)-এ গিয়ে আপনার GitHub একাউন্ট দিয়ে লগইন করুন।
+2. ড্যাশবোর্ডে **"Add New..."** বাটনে ক্লিক করে **"Project"** নির্বাচন করুন।
+3. আপনার পুশ করা GitHub রিপোজিটরিটি নির্বাচন করে **"Import"** চাপুন।
+4. **Root Directory** অপশনে ক্লিক করে লিখুন: `web`
+5. **Framework Preset**: নির্বাচন করুন `Vite`
+6. **"Deploy"** বাটনে ক্লিক করুন!
+7. ৩০ সেকেন্ডের মধ্যে আপনার ওয়েবসাইট লাইভ হয়ে যাবে (যেমন: `https://your-samity.vercel.app`)।
+
+### ধাপ ৩: মোবাইল অ্যাপের সাথে ভার্সেল কানেক্ট করুন
+- মোবাইল অ্যাপের শীর্ষবার বা ড্যাশবোর্ড থেকে **"ভার্সেল ও ক্লাউড সিঙ্ক হাব"**-এ প্রবেশ করুন।
+- সেখানে আপনার ভার্সেল লাইভ ওয়েবসাইটের লিংকটি যুক্ত করে **"ডাটা স্ক্যান ও মিলান"** বাটনে ক্লিক করুন।
+- মোবাইল ও ভার্সেল ওয়েব ডাটাবেজ সাথে সাথে স্ক্যান হয়ে ১০০% সেম টু সেম ম্যাচ হয়ে যাবে!
+
+---
+
+## 📱 প্রযুক্তি স্ট্যাক (Tech Stack)
+- **মোবাইল অ্যাপ:** Kotlin, Jetpack Compose, Material Design 3 (M3), Kotlin Coroutines & Flow, Room Architecture, Multi-Tenant Session Isolation.
+- **ওয়েব পোর্টাল:** React, Vite, Tailwind CSS, Lucide Icons.
+- **ক্লাউড ব্যাকএন্ড ও সিঙ্ক:** Vercel Serverless API (`/api/sync`), Bidirectional Parity Gateway (`VercelSyncGateway`).

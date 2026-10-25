@@ -1,0 +1,6 @@
+{
+  "name": "Samity Kitab 360",
+  "description": "Commercial Multi-Tenant Samity, Member, Bank Deposit, Due, Multi-Channel Reminder, Letterhead & Signature Management ERP Software",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

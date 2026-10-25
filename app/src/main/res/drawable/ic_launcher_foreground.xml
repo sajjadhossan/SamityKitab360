@@ -1,0 +1,67 @@
+<?xml version="1.0" encoding="utf-8"?>
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:aapt="http://schemas.android.com/aapt"
+    android:width="108dp"
+    android:height="108dp"
+    android:viewportWidth="108"
+    android:viewportHeight="108">
+    <!-- Golden Shield Outer -->
+    <path
+        android:pathData="M54,23 L75,32 C75,54 66,69 54,77 C42,69 33,54 33,32 Z">
+        <aapt:attr name="android:fillColor">
+            <gradient
+                android:startX="33"
+                android:startY="23"
+                android:endX="75"
+                android:endY="77"
+                android:type="linear">
+                <item android:offset="0.0" android:color="#FDB813" />
+                <item android:offset="1.0" android:color="#E68A00" />
+            </gradient>
+        </aapt:attr>
+    </path>
+    <!-- Inner Dark Shield Inset -->
+    <path
+        android:pathData="M54,27 L71,34.5 C71,52 63.5,65 54,72 C44.5,65 37,52 37,34.5 Z"
+        android:fillColor="#0E243F" />
+
+    <!-- Three Connected Community Figures in Gold and White -->
+    <!-- Center Head -->
+    <path
+        android:pathData="M54,34 A4.5,4.5 0 1,0 54,43 A4.5,4.5 0 1,0 54,34 Z"
+        android:fillColor="#FFD54F" />
+    <!-- Center Body / Hands holding coin -->
+    <path
+        android:pathData="M47,45 C47,43.5 50,42.5 54,42.5 C58,42.5 61,43.5 61,45 L62,53 C59,54 56,54.5 54,54.5 C52,54.5 49,54 46,53 Z"
+        android:fillColor="#FFD54F" />
+
+    <!-- Left Figure -->
+    <path
+        android:pathData="M44,38 A3.5,3.5 0 1,0 44,45 A3.5,3.5 0 1,0 44,38 Z"
+        android:fillColor="#FFE082" />
+    <path
+        android:pathData="M38.5,47.5 C38.5,46 41,45.2 44,45.2 C45.5,45.2 47,45.5 48,46 L47,53 C44,53 41.5,52 39,50.5 Z"
+        android:fillColor="#FFE082" />
+
+    <!-- Right Figure -->
+    <path
+        android:pathData="M64,38 A3.5,3.5 0 1,0 64,45 A3.5,3.5 0 1,0 64,38 Z"
+        android:fillColor="#FFE082" />
+    <path
+        android:pathData="M69.5,47.5 C69.5,46 67,45.2 64,45.2 C62.5,45.2 61,45.5 60,46 L61,53 C64,53 66.5,52 69,50.5 Z"
+        android:fillColor="#FFE082" />
+
+    <!-- Golden Coin with Taka/Growth Mark -->
+    <path
+        android:pathData="M54,56 A8,8 0 1,0 54,72 A8,8 0 1,0 54,56 Z"
+        android:fillColor="#FFB300" />
+    <path
+        android:pathData="M54,58 A6,6 0 1,0 54,70 A6,6 0 1,0 54,58 Z"
+        android:fillColor="#FFCA28" />
+    <!-- Taka/Sign Symbol ৳ -->
+    <path
+        android:pathData="M52,61 L56,61 M54,61 L54,67 M52,64 L56,64"
+        android:strokeWidth="1.2"
+        android:strokeColor="#5D4037"
+        android:strokeLineCap="round" />
+</vector>
