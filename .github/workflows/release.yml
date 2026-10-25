@@ -1,0 +1,76 @@
+name: Build & Publish Android APK Release
+
+on:
+  push:
+    branches: [ main, master ]
+    tags:
+      - 'v*'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    name: Package and Release APK
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+        with:
+          lfs: true
+
+      - name: Set up JDK 17
+        uses: actions/setup-java@v4
+        with:
+          java-version: '17'
+          distribution: 'temurin'
+
+      - name: Verify or Build APK
+        run: |
+          mkdir -p apk
+          if [ ! -f "apk/samity-kitab-360-pro.apk" ]; then
+            chmod +x gradlew || true
+            gradle assembleRelease || gradle assembleDebug
+            cp app/build/outputs/apk/*/*.apk apk/samity-kitab-360-pro.apk || true
+          fi
+          ls -lh apk/
+
+      - name: Determine Release Tag
+        id: vars
+        run: |
+          if [[ "${{ github.ref }}" == refs/tags/* ]]; then
+            TAG_NAME="${GITHUB_REF#refs/tags/}"
+          else
+            TAG_NAME="v1.0.0-build-$(date +'%Y%m%d%H%M')"
+          fi
+          echo "tag=$TAG_NAME" >> $GITHUB_OUTPUT
+
+      - name: Create GitHub Release and Upload APK
+        uses: softprops/action-gh-release@v2
+        if: startsWith(github.ref, 'refs/tags/') || github.ref == 'refs/heads/main' || github.ref == 'refs/heads/master'
+        with:
+          tag_name: ${{ steps.vars.outputs.tag }}
+          name: "সমিতি কিতাব ৩৬০ প্রো (${{ steps.vars.outputs.tag }})"
+          body: |
+            ## 📱 Samity Kitab 360 Pro - Android APK Release
+            
+            স্বাগতম! সমিতি কিতাব ৩৬০ (Samity Kitab 360) প্রফেশনাল সমবায় ও ক্ষুদ্রঋণ ইআরপি অ্যাপের রিলিজ এপিকে।
+            
+            ### ✨ অন্তর্ভুক্ত ফিচারসমূহ:
+            - 🧭 **হ্যামবার্গার মেনু ড্রয়ার:** সমস্ত মডিউলে দ্রুত অ্যাক্সেস।
+            - 🔲 **৪ কর্নার গ্রিড (2x2 Four-Corner Layout):** সদস্য, চাঁদা, রিপোর্ট এবং সেটিংসের তাৎক্ষণিক ওভারভিউ।
+            - 🏢 **সমিতি সেটআপ ও কনফিগারেশন:** নাম (বাংলা/ইংরেজি), টাইপ, ঠিকানা ও ব্যাংক/MFS।
+            - 💰 **চাঁদা আদায় ও মানি রিসিট:** ইনস্ট্যান্ট প্রিন্ট ও শেয়ারযোগ্য ভাউচার।
+            - 👥 **সদস্য ব্যবস্থাপনা ও বকেয়া তাগাদা:** অটোমেটেড এসএমএস নোটিফিকেশন।
+            - 🌐 **ভার্সেল ক্লাউড ও ওয়েব পোর্টাল সিঙ্ক:** ১০০% সেম টু সেম ডাটা প্যারটি।
+            
+            ### 📥 ডাউনলোড ফাইল:
+            - **`samity-kitab-360-pro.apk`** (অফিসিয়াল প্রো এপিকে - সরাসরি ইনস্টলযোগ্য)
+          draft: false
+          prerelease: false
+          files: |
+            apk/samity-kitab-360-pro.apk
+            apk/app-debug.apk
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
