@@ -16,6 +16,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.testTag
@@ -445,6 +446,212 @@ fun DashboardScreen(
                         label = if (isBn) "আংশিক" else "Partial",
                         color = StatusPartialAmber,
                         isBn = isBn
+                    )
+                }
+            }
+        }
+
+        // 4-Corner Modern Squircle Module Hub ("ফোর কর্নার ছোট ছোট করে ফোর কর্নার ফোর কর্নার কইরা এই অপশনগুলা অ্যাড করবা")
+        item {
+            Column(modifier = Modifier.fillMaxWidth().testTag("four_corner_quick_hub_section")) {
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Box(
+                            modifier = Modifier
+                                .size(34.dp)
+                                .clip(RoundedCornerShape(10.dp))
+                                .background(SamityNavyPrimary),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Icon(Icons.Default.GridView, contentDescription = null, tint = SamityGold, modifier = Modifier.size(20.dp))
+                        }
+                        Spacer(modifier = Modifier.width(10.dp))
+                        Column {
+                            Text(
+                                text = if (isBn) "৪-কর্নার দ্রুত সেবা ও মডিউল হাব" else "4-Corner Quick Action Hub",
+                                fontSize = 15.sp,
+                                fontWeight = FontWeight.ExtraBold,
+                                color = SlateTextPrimary
+                            )
+                            Text(
+                                text = if (isBn) "যেকোনো মডিউলে সরাসরি দ্রুত প্রবেশ করুন" else "Direct 1-tap quick module navigation",
+                                fontSize = 10.5.sp,
+                                color = Color(0xFF64748B)
+                            )
+                        }
+                    }
+                    Surface(
+                        shape = RoundedCornerShape(12.dp),
+                        color = Color(0xFFEFF6FF)
+                    ) {
+                        Text(
+                            text = if (isBn) "১২টি দ্রুত হাব" else "12 Tiles",
+                            color = SamityNavyPrimary,
+                            fontSize = 10.sp,
+                            fontWeight = FontWeight.Bold,
+                            modifier = Modifier.padding(horizontal = 8.dp, vertical = 3.5.dp)
+                        )
+                    }
+                }
+
+                Spacer(modifier = Modifier.height(12.dp))
+
+                // 2-Column 4-Corner Squircle Cards
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(10.dp)
+                ) {
+                    DashboardFourCornerCard(
+                        title = if (isBn) "সমিতি সেটআপ" else "Samity Setup",
+                        subtitle = if (isBn) "নাম, ফি, ব্যাংক ও কনফিগ" else "Name, fee & bank setup",
+                        badge = if (isBn) "প্রশাসন" else "Admin",
+                        icon = Icons.Default.Apartment,
+                        gradient = listOf(Color(0xFF0D2C54), Color(0xFF1E40AF)),
+                        modifier = Modifier.weight(1f),
+                        onClick = onNavigateToSamitySetup
+                    )
+                    DashboardFourCornerCard(
+                        title = if (isBn) "সদস্য তালিকা" else "Members",
+                        subtitle = if (isBn) "সদস্য, মোবাইল ও বকেয়া" else "Directory & balances",
+                        badge = "${members.size} জন",
+                        icon = Icons.Default.People,
+                        gradient = listOf(Color(0xFF047857), Color(0xFF10B981)),
+                        modifier = Modifier.weight(1f),
+                        onClick = onNavigateToMembers
+                    )
+                }
+
+                Spacer(modifier = Modifier.height(10.dp))
+
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(10.dp)
+                ) {
+                    DashboardFourCornerCard(
+                        title = if (isBn) "চাঁদা ও জমা" else "Deposits",
+                        subtitle = if (isBn) "ব্যাংক, ক্যাশ, বিকাশ ও রসিদ" else "Bank, cash & bKash",
+                        badge = "কালেকশন",
+                        icon = Icons.Default.AccountBalance,
+                        gradient = listOf(Color(0xFF0E7490), Color(0xFF06B6D4)),
+                        modifier = Modifier.weight(1f),
+                        onClick = onNavigateToDeposits
+                    )
+                    DashboardFourCornerCard(
+                        title = if (isBn) "বাল্ক জমা স্লিপ" else "Bulk Slip",
+                        subtitle = if (isBn) "একসাথে অনেকের চাঁদা এন্ট্রি" else "Batch receipt entry",
+                        badge = "মাল্টি স্লিপ",
+                        icon = Icons.Default.ReceiptLong,
+                        gradient = listOf(Color(0xFFD97706), Color(0xFFF59E0B)),
+                        modifier = Modifier.weight(1f),
+                        onClick = onNavigateToBulkDeposit
+                    )
+                }
+
+                Spacer(modifier = Modifier.height(10.dp))
+
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(10.dp)
+                ) {
+                    DashboardFourCornerCard(
+                        title = if (isBn) "আদায় ও বকেয়া" else "Due Tracking",
+                        subtitle = if (isBn) "কার পরিশোধ আর কার বাকি" else "Paid & unpaid tracking",
+                        badge = "${totalDue.toInt()} ৳",
+                        icon = Icons.Default.FactCheck,
+                        gradient = listOf(Color(0xFFBE123C), Color(0xFFF43F5E)),
+                        modifier = Modifier.weight(1f),
+                        onClick = onNavigateToPaymentStatus
+                    )
+                    DashboardFourCornerCard(
+                        title = if (isBn) "তাগিদ নোটিশ" else "Reminders",
+                        subtitle = if (isBn) "WhatsApp, SMS ও মেসেঞ্জার" else "SMS & WhatsApp alerts",
+                        badge = "নোটিশ",
+                        icon = Icons.Default.NotificationsActive,
+                        gradient = listOf(Color(0xFFC2410C), Color(0xFFFB923C)),
+                        modifier = Modifier.weight(1f),
+                        onClick = onNavigateToReminders
+                    )
+                }
+
+                Spacer(modifier = Modifier.height(10.dp))
+
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(10.dp)
+                ) {
+                    DashboardFourCornerCard(
+                        title = if (isBn) "ব্যয় ও তহবিল" else "Expenses & Fund",
+                        subtitle = if (isBn) "ভাউচার অনুমোদন ও নিট ফান্ড" else "Voucher & available fund",
+                        badge = "ব্যালেন্স",
+                        icon = Icons.Default.AccountBalanceWallet,
+                        gradient = listOf(Color(0xFF6D28D9), Color(0xFF8B5CF6)),
+                        modifier = Modifier.weight(1f),
+                        onClick = onNavigateToFundBalance
+                    )
+                    DashboardFourCornerCard(
+                        title = if (isBn) "আর্থিক রিপোর্ট" else "Reports & Audit",
+                        subtitle = if (isBn) "দৈনিক, মাসিক ও অডিট হিসাব" else "Daily & audit reports",
+                        badge = "অডিট",
+                        icon = Icons.Default.Assessment,
+                        gradient = listOf(Color(0xFF1D4ED8), Color(0xFF3B82F6)),
+                        modifier = Modifier.weight(1f),
+                        onClick = onNavigateToReports
+                    )
+                }
+
+                Spacer(modifier = Modifier.height(10.dp))
+
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(10.dp)
+                ) {
+                    DashboardFourCornerCard(
+                        title = if (isBn) "লেটারহেড ও প্যাড" else "Letterhead",
+                        subtitle = if (isBn) "অফিস প্যাড, প্রত্যয়ন ও সনদ" else "Official pads & notices",
+                        badge = "ডকুমেন্টস",
+                        icon = Icons.Default.Description,
+                        gradient = listOf(Color(0xFF4338CA), Color(0xFF6366F1)),
+                        modifier = Modifier.weight(1f),
+                        onClick = onNavigateToDocumentGenerator
+                    )
+                    DashboardFourCornerCard(
+                        title = if (isBn) "অনুমোদন ও অডিট" else "Approvals",
+                        subtitle = if (isBn) "লেনদেন অনুমোদন ও লগ" else "Approvals & audit log",
+                        badge = "নিরাপত্তা",
+                        icon = Icons.Default.VerifiedUser,
+                        gradient = listOf(Color(0xFF065F46), Color(0xFF059669)),
+                        modifier = Modifier.weight(1f),
+                        onClick = onNavigateToApprovalWorkflow
+                    )
+                }
+
+                Spacer(modifier = Modifier.height(10.dp))
+
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(10.dp)
+                ) {
+                    DashboardFourCornerCard(
+                        title = if (isBn) "ভার্সেল সিঙ্ক হাব" else "Cloud Sync Hub",
+                        subtitle = if (isBn) "ওয়েবসাইট ও ক্লাউড সিঙ্ক" else "Vercel real-time sync",
+                        badge = "Live Sync",
+                        icon = Icons.Default.CloudSync,
+                        gradient = listOf(Color(0xFF0F766E), Color(0xFF14B8A6)),
+                        modifier = Modifier.weight(1f),
+                        onClick = onNavigateToVercelSync
+                    )
+                    DashboardFourCornerCard(
+                        title = if (isBn) "সেটিংস ও ব্যাকআপ" else "Settings & Backup",
+                        subtitle = if (isBn) "রোল, ভাষা ও ডাটাবেজ ব্যাকআপ" else "Roles, language & backup",
+                        badge = "সিস্টেম",
+                        icon = Icons.Default.Settings,
+                        gradient = listOf(Color(0xFF1E293B), Color(0xFF334155)),
+                        modifier = Modifier.weight(1f),
+                        onClick = onNavigateToSettings
                     )
                 }
             }
@@ -988,3 +1195,88 @@ private fun ErpModuleItem(
     }
 }
 
+@Composable
+fun DashboardFourCornerCard(
+    title: String,
+    subtitle: String,
+    badge: String,
+    icon: ImageVector,
+    gradient: List<Color>,
+    modifier: Modifier = Modifier,
+    onClick: () -> Unit
+) {
+    Card(
+        shape = RoundedCornerShape(18.dp),
+        elevation = CardDefaults.cardElevation(defaultElevation = 3.dp),
+        modifier = modifier
+            .clip(RoundedCornerShape(18.dp))
+            .clickable(onClick = onClick)
+    ) {
+        Box(
+            modifier = Modifier
+                .fillMaxWidth()
+                .background(Brush.linearGradient(gradient))
+                .padding(14.dp)
+        ) {
+            Column(
+                modifier = Modifier.fillMaxWidth(),
+                verticalArrangement = Arrangement.SpaceBetween
+            ) {
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Box(
+                        modifier = Modifier
+                            .size(38.dp)
+                            .clip(RoundedCornerShape(12.dp))
+                            .background(Color.White.copy(alpha = 0.22f)),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Icon(
+                            imageVector = icon,
+                            contentDescription = null,
+                            tint = Color.White,
+                            modifier = Modifier.size(22.dp)
+                        )
+                    }
+
+                    Surface(
+                        shape = RoundedCornerShape(10.dp),
+                        color = Color.White.copy(alpha = 0.25f)
+                    ) {
+                        Text(
+                            text = badge,
+                            fontSize = 9.sp,
+                            fontWeight = FontWeight.Bold,
+                            color = Color.White,
+                            modifier = Modifier.padding(horizontal = 7.dp, vertical = 2.5.dp)
+                        )
+                    }
+                }
+
+                Spacer(modifier = Modifier.height(10.dp))
+
+                Text(
+                    text = title,
+                    fontSize = 13.5.sp,
+                    fontWeight = FontWeight.Bold,
+                    color = Color.White,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis
+                )
+
+                Spacer(modifier = Modifier.height(2.dp))
+
+                Text(
+                    text = subtitle,
+                    fontSize = 10.sp,
+                    color = Color.White.copy(alpha = 0.88f),
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis
+                )
+            }
+        }
+    }
+}
