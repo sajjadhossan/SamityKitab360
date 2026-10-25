@@ -1,5 +1,6 @@
 package com.example.ui.screens
 
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -37,6 +38,13 @@ fun DashboardScreen(
     onNavigateToBulkDeposit: () -> Unit,
     onNavigateToExpenses: () -> Unit,
     onNavigateToReminders: () -> Unit,
+    onNavigateToPaymentStatus: () -> Unit = {},
+    onNavigateToFundBalance: () -> Unit = {},
+    onNavigateToReports: () -> Unit = {},
+    onNavigateToLetterhead: () -> Unit = {},
+    onNavigateToDocumentGenerator: () -> Unit = {},
+    onNavigateToAuditTrail: () -> Unit = {},
+    onNavigateToSamitySetup: () -> Unit = {},
     onViewReceipt: (Deposit) -> Unit,
     onNavigateToVercelSync: () -> Unit = {},
     modifier: Modifier = Modifier
@@ -439,6 +447,161 @@ fun DashboardScreen(
             }
         }
 
+        // 11 Core ERP Modules Section
+        item {
+            Card(
+                shape = RoundedCornerShape(16.dp),
+                colors = CardDefaults.cardColors(containerColor = Color.White),
+                border = CardDefaults.outlinedCardBorder(),
+                elevation = CardDefaults.cardElevation(2.dp),
+                modifier = Modifier.fillMaxWidth().testTag("erp_modules_hub_card")
+            ) {
+                Column(modifier = Modifier.padding(14.dp)) {
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            Box(
+                                modifier = Modifier
+                                    .size(32.dp)
+                                    .clip(CircleShape)
+                                    .background(SamityNavyPrimary),
+                                contentAlignment = Alignment.Center
+                            ) {
+                                Icon(
+                                    Icons.Default.Widgets,
+                                    contentDescription = null,
+                                    tint = SamityGold,
+                                    modifier = Modifier.size(18.dp)
+                                )
+                            }
+                            Spacer(modifier = Modifier.width(10.dp))
+                            Column {
+                                Text(
+                                    text = if (isBn) "১১টি মূল সেবা ও ইআরপি মডিউল" else "11 Core ERP Modules",
+                                    fontWeight = FontWeight.Bold,
+                                    fontSize = 14.sp,
+                                    color = SamityNavyDark
+                                )
+                                Text(
+                                    text = if (isBn) "সমিতি পরিচালনার সকল ফিচার" else "All Management Features",
+                                    fontSize = 10.sp,
+                                    color = Color(0xFF64748B)
+                                )
+                            }
+                        }
+                        Surface(
+                            shape = RoundedCornerShape(12.dp),
+                            color = Color(0xFFEFF6FF)
+                        ) {
+                            Text(
+                                text = if (isBn) "১১টি ফিচার সক্রিয়" else "11 Active",
+                                color = SamityNavyPrimary,
+                                fontSize = 10.sp,
+                                fontWeight = FontWeight.Bold,
+                                modifier = Modifier.padding(horizontal = 8.dp, vertical = 3.dp)
+                            )
+                        }
+                    }
+
+                    Spacer(modifier = Modifier.height(14.dp))
+
+                    Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                        ErpModuleItem(
+                            title = if (isBn) "১. সমিতি ও মাল্টি-টেন্যান্ট ব্যবস্থাপনা" else "1. Samity & Multi-Tenant Setup",
+                            subtitle = if (isBn) "১ বা একাধিক সমিতি তৈরি ও পূর্ণ পরিচালনা" else "Create and manage multiple Samities",
+                            badge = if (isBn) "সমিতি" else "Samity",
+                            icon = Icons.Default.Apartment,
+                            iconColor = SamityNavyPrimary,
+                            onClick = onNavigateToSamitySetup
+                        )
+                        ErpModuleItem(
+                            title = if (isBn) "২. সদস্য তালিকা ও পূর্ণাঙ্গ যোগাযোগ" else "2. Members & Complete Contact Info",
+                            subtitle = if (isBn) "সদস্য যোগ, মোবাইল, হোয়াটসঅ্যাপ, ফেসবুক ও ঠিকানা" else "Add and manage members with all contacts",
+                            badge = if (isBn) "সদস্য" else "Members",
+                            icon = Icons.Default.People,
+                            iconColor = Color(0xFF0284C7),
+                            onClick = onNavigateToMembers
+                        )
+                        ErpModuleItem(
+                            title = if (isBn) "৩. মাসিক চাঁদা ও সাবস্ক্রিপশন নির্ধারণ" else "3. Monthly Subscription / চাঁদা Config",
+                            subtitle = if (isBn) "প্রত্যেক সদস্যের চাঁদা ও ডিফল্ট রেট সেট করুন" else "Set monthly fee amount for each member",
+                            badge = if (isBn) "চাঁদা রেট" else "Fee",
+                            icon = Icons.Default.PriceCheck,
+                            iconColor = Color(0xFFD97706),
+                            onClick = onNavigateToSamitySetup
+                        )
+                        ErpModuleItem(
+                            title = if (isBn) "৪. ব্যাংক, ক্যাশ ও এমএফএস জমা" else "4. Bank, Cash & MFS Deposits",
+                            subtitle = if (isBn) "ব্যাংক কাউন্টার, অনলাইন, বিকাশ, নগদ ও বাল্ক স্লিপ" else "Record bank, cash and mobile deposits",
+                            badge = if (isBn) "জমা ও বাল্ক" else "Deposits",
+                            icon = Icons.Default.AccountBalance,
+                            iconColor = SamityEmerald,
+                            onClick = onNavigateToDeposits
+                        )
+                        ErpModuleItem(
+                            title = if (isBn) "৫. পরিশোধ ও বকেয়া ট্র্যাকিং" else "5. Payment & Due Tracking",
+                            subtitle = if (isBn) "কার পরিশোধিত, কার বকেয়া, কার আংশিক ট্র্যাক" else "Track paid, unpaid & partially paid members",
+                            badge = if (isBn) "পরিশোধ স্থিতি" else "Due Track",
+                            icon = Icons.Default.FactCheck,
+                            iconColor = Color(0xFFDC2626),
+                            onClick = onNavigateToPaymentStatus
+                        )
+                        ErpModuleItem(
+                            title = if (isBn) "৬. পেইড মানিসিপ্ট ও প্রিন্ট রসিদ" else "6. Professional Paid Receipts & Print",
+                            subtitle = if (isBn) "লোগো, স্লোগান, কিউআর ও অনুমোদিত স্বাক্ষরসহ রসিদ" else "Print receipts with logo, slogan & signatures",
+                            badge = if (isBn) "মানিসিপ্ট" else "Receipts",
+                            icon = Icons.Default.Receipt,
+                            iconColor = Color(0xFF059669),
+                            onClick = onNavigateToDeposits
+                        )
+                        ErpModuleItem(
+                            title = if (isBn) "৭. মাল্টি-চ্যানেল বকেয়া রিমাইন্ডার" else "7. Multi-Channel Reminders",
+                            subtitle = if (isBn) "WhatsApp, SMS, Telegram ও Messenger-এ নোটিশ" else "Send reminders via WhatsApp, SMS, Telegram, FB",
+                            badge = if (isBn) "তাগিদ" else "Remind",
+                            icon = Icons.Default.NotificationsActive,
+                            iconColor = Color(0xFFEA580C),
+                            onClick = onNavigateToReminders
+                        )
+                        ErpModuleItem(
+                            title = if (isBn) "৮. ব্যয়, উপলব্ধ ফান্ড ও ব্যাংক ব্যালেন্স" else "8. Expenses, Net Fund & Bank Balances",
+                            subtitle = if (isBn) "খরচ অনুমোদন, নগদ ও ব্যাংকের সমন্বিত ব্যালেন্স" else "Manage expenses, available fund & balances",
+                            badge = if (isBn) "ব্যালেন্স" else "Funds",
+                            icon = Icons.Default.AccountBalanceWallet,
+                            iconColor = Color(0xFF7C3AED),
+                            onClick = onNavigateToFundBalance
+                        )
+                        ErpModuleItem(
+                            title = if (isBn) "৯. আর্থিক ও অডিট রিপোর্টস" else "9. Financial & Audit Reports",
+                            subtitle = if (isBn) "দৈনিক, মাসিক, বার্ষিক, সদস্য ও ব্যাংক রিপোর্ট" else "Daily, monthly, yearly, member & bank reports",
+                            badge = if (isBn) "রিপোর্টস" else "Reports",
+                            icon = Icons.Default.Assessment,
+                            iconColor = Color(0xFF2563EB),
+                            onClick = onNavigateToReports
+                        )
+                        ErpModuleItem(
+                            title = if (isBn) "১০. লেটারহেড ও অফিস নথি জেনারেটর" else "10. Customizable Letterhead & Documents",
+                            subtitle = if (isBn) "প্যাড কনফিগারেশন, সদস্যতা সনদ ও সভার নোটিশ প্রিন্ট" else "Create documents with custom letterhead & QR",
+                            badge = if (isBn) "লেটারহেড" else "Letterhead",
+                            icon = Icons.Default.Description,
+                            iconColor = Color(0xFF4F46E5),
+                            onClick = onNavigateToDocumentGenerator
+                        )
+                        ErpModuleItem(
+                            title = if (isBn) "১১. অডিট ট্রেইল ও নিরাপত্তা অনুমোদন" else "11. Audit Trail & Role Permissions",
+                            subtitle = if (isBn) "অনুমোদন ওয়ার্কফ্লো, রোল ভিত্তিক নিরাপত্তা ও হিস্ট্রি" else "Approval workflow, audit logs & permissions",
+                            badge = if (isBn) "অডিট ও সিকিউরিটি" else "Audit",
+                            icon = Icons.Default.Security,
+                            iconColor = SamityNavyDark,
+                            onClick = onNavigateToAuditTrail
+                        )
+                    }
+                }
+            }
+        }
+
         // Recent Deposits & Receipts
         item {
             Row(
@@ -711,3 +874,82 @@ private fun DepositRowCard(
         }
     }
 }
+
+@Composable
+private fun ErpModuleItem(
+    title: String,
+    subtitle: String,
+    badge: String,
+    icon: ImageVector,
+    iconColor: Color,
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier
+) {
+    Surface(
+        shape = RoundedCornerShape(12.dp),
+        color = Color.White,
+        border = BorderStroke(1.dp, Color(0xFFE2E8F0)),
+        modifier = modifier
+            .fillMaxWidth()
+            .clip(RoundedCornerShape(12.dp))
+            .clickable(onClick = onClick)
+    ) {
+        Row(
+            modifier = Modifier.padding(12.dp),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Box(
+                modifier = Modifier
+                    .size(40.dp)
+                    .clip(RoundedCornerShape(10.dp))
+                    .background(iconColor.copy(alpha = 0.12f)),
+                contentAlignment = Alignment.Center
+            ) {
+                Icon(icon, contentDescription = title, tint = iconColor, modifier = Modifier.size(22.dp))
+            }
+            Spacer(modifier = Modifier.width(12.dp))
+            Column(modifier = Modifier.weight(1f)) {
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    Text(
+                        text = title,
+                        fontSize = 13.sp,
+                        fontWeight = FontWeight.Bold,
+                        color = SamityNavyDark
+                    )
+                    Surface(
+                        shape = RoundedCornerShape(4.dp),
+                        color = iconColor.copy(alpha = 0.1f)
+                    ) {
+                        Text(
+                            text = badge,
+                            fontSize = 9.sp,
+                            fontWeight = FontWeight.Bold,
+                            color = iconColor,
+                            modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp)
+                        )
+                    }
+                }
+                Spacer(modifier = Modifier.height(2.dp))
+                Text(
+                    text = subtitle,
+                    fontSize = 11.sp,
+                    color = Color(0xFF64748B),
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis
+                )
+            }
+            Spacer(modifier = Modifier.width(6.dp))
+            Icon(
+                Icons.Default.ChevronRight,
+                contentDescription = null,
+                tint = Color(0xFF94A3B8),
+                modifier = Modifier.size(18.dp)
+            )
+        }
+    }
+}
+

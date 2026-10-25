@@ -237,6 +237,13 @@ fun MainAppContent(repository: SamityRepository) {
                                 onNavigateToBulkDeposit = { currentScreen = Screen.BulkDeposit },
                                 onNavigateToExpenses = { currentScreen = Screen.Expenses },
                                 onNavigateToReminders = { currentScreen = Screen.Reminders },
+                                onNavigateToPaymentStatus = { currentScreen = Screen.PaymentStatus },
+                                onNavigateToFundBalance = { currentScreen = Screen.FundBalance },
+                                onNavigateToReports = { currentScreen = Screen.Reports },
+                                onNavigateToLetterhead = { currentScreen = Screen.Letterhead },
+                                onNavigateToDocumentGenerator = { currentScreen = Screen.DocumentGenerator },
+                                onNavigateToAuditTrail = { currentScreen = Screen.AuditTrail },
+                                onNavigateToSamitySetup = { currentScreen = Screen.SamitySetup },
                                 onViewReceipt = { dep -> currentScreen = Screen.ReceiptView(dep) },
                                 onNavigateToVercelSync = { currentScreen = Screen.VercelCloudSync }
                             )

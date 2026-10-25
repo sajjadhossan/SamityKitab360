@@ -48,14 +48,11 @@ fun BulkDepositScreen(
     var branchName by remember { mutableStateOf(samity.bankBranch) }
     var accountNo by remember { mutableStateOf(samity.bankAccountNo) }
     var depositDate by remember { mutableStateOf(SimpleDateFormat("dd MMMM yyyy", Locale.getDefault()).format(Date())) }
-    var totalBankAmountStr by remember { mutableStateOf("15000") }
     var depositorName by remember { mutableStateOf(samity.treasurerName) }
     var depositorPhone by remember { mutableStateOf(samity.treasurerPhone) }
-
     // List of member items inside this single bank slip
     val itemsList = remember {
         mutableStateListOf<BulkDepositItem>().apply {
-            // Default 3 members pre-added for quick demo
             members.take(3).forEachIndexed { idx, m ->
                 add(
                     BulkDepositItem(
@@ -63,7 +60,7 @@ fun BulkDepositScreen(
                         memberCode = m.memberCode,
                         memberName = m.nameBn,
                         phone = m.phone,
-                        amount = 5000.0,
+                        amount = m.monthlyFee,
                         paymentMonth = "অক্টোবর ২০২৬",
                         voucherNo = "RCPT-BULK-${String.format("%03d", idx + 1)}"
                     )
@@ -71,6 +68,7 @@ fun BulkDepositScreen(
             }
         }
     }
+    var totalBankAmountStr by remember { mutableStateOf(itemsList.sumOf { it.amount }.toInt().toString()) }
 
     val totalEnteredInSlip = totalBankAmountStr.toDoubleOrNull() ?: 0.0
     val totalSumOfMembers = itemsList.sumOf { it.amount }
