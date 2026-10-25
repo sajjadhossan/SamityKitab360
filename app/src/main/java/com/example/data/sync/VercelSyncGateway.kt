@@ -20,7 +20,7 @@ class VercelSyncGateway(
 ) {
     // Vercel Web Portal Connection Configuration
     var vercelBaseUrl by mutableStateOf("https://samity-kitab-360.vercel.app")
-    var apiKey by mutableStateOf("sk_live_samity_360_cloud_token")
+    var apiKey by mutableStateOf(com.example.BuildConfig.VERCEL_API_TOKEN)
     var isAutoSyncEnabled by mutableStateOf(true)
 
     // Live Sync Status
