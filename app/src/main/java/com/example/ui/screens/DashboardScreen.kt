@@ -150,6 +150,134 @@ fun DashboardScreen(
             }
         }
 
+        // 2x2 Grid Layout (Four Corner Layout): Members, Deposits, Reports, Settings
+        item {
+            Column(modifier = Modifier.fillMaxWidth().testTag("four_corner_2x2_hero_grid")) {
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Box(
+                            modifier = Modifier
+                                .size(36.dp)
+                                .clip(RoundedCornerShape(10.dp))
+                                .background(SamityNavyPrimary),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Icon(
+                                imageVector = Icons.Default.GridView,
+                                contentDescription = null,
+                                tint = SamityGold,
+                                modifier = Modifier.size(20.dp)
+                            )
+                        }
+                        Spacer(modifier = Modifier.width(10.dp))
+                        Column {
+                            Text(
+                                text = if (isBn) "প্রধান ৪-কর্নার ড্যাশবোর্ড হাব" else "Core 2x2 Feature Quadrants",
+                                fontSize = 15.sp,
+                                fontWeight = FontWeight.ExtraBold,
+                                color = SlateTextPrimary
+                            )
+                            Text(
+                                text = if (isBn) "সরাসরি ৪টি প্রধান সেবায় প্রবেশ করুন (Members, Deposits, Reports, Settings)"
+                                else "Direct access: Members, Deposits, Reports & Settings",
+                                fontSize = 10.5.sp,
+                                color = Color(0xFF64748B)
+                            )
+                        }
+                    }
+
+                    Surface(
+                        shape = RoundedCornerShape(12.dp),
+                        color = Color(0xFFEFF6FF)
+                    ) {
+                        Text(
+                            text = if (isBn) "২x২ গ্রিড" else "2x2 Grid",
+                            color = SamityNavyPrimary,
+                            fontSize = 10.sp,
+                            fontWeight = FontWeight.Bold,
+                            modifier = Modifier.padding(horizontal = 8.dp, vertical = 3.5.dp)
+                        )
+                    }
+                }
+
+                Spacer(modifier = Modifier.height(12.dp))
+
+                // ROW 1: Quadrant 1 (Top-Left: Members) & Quadrant 2 (Top-Right: Deposits)
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(12.dp)
+                ) {
+                    QuadrantFeatureCard(
+                        quadrantLabel = "Quadrant 1 • Top-Left",
+                        title = if (isBn) "সদস্য ব্যবস্থাপনা" else "Members",
+                        subtitle = if (isBn) "সদস্য তালিকা, প্রোফাইল ও ডিরেক্টরি" else "Member directory, dues & profile",
+                        footerMetric = "${totalMembersCount} জন সদস্য • ${paidCount} পেইড",
+                        badgeText = "${members.size} Members",
+                        actionCue = if (isBn) "প্রবেশ করুন →" else "Open →",
+                        icon = Icons.Default.People,
+                        gradient = listOf(Color(0xFF047857), Color(0xFF10B981)),
+                        testTag = "quadrant_card_members",
+                        modifier = Modifier.weight(1f),
+                        onClick = onNavigateToMembers
+                    )
+
+                    QuadrantFeatureCard(
+                        quadrantLabel = "Quadrant 2 • Top-Right",
+                        title = if (isBn) "চাঁদা ও জমা সংগ্রহ" else "Deposits",
+                        subtitle = if (isBn) "ব্যাংক, ক্যাশ, বিকাশ ও বাল্ক স্লিপ" else "Bank, cash, bKash & collection",
+                        footerMetric = NumberToWords.formatCurrency(actualCollection, isBn),
+                        badgeText = if (isBn) "কালেকশন" else "Deposits",
+                        actionCue = if (isBn) "জমা দিন →" else "Collect →",
+                        icon = Icons.Default.AccountBalance,
+                        gradient = listOf(Color(0xFF0F3B66), Color(0xFF1D4ED8)),
+                        testTag = "quadrant_card_deposits",
+                        modifier = Modifier.weight(1f),
+                        onClick = onNavigateToDeposits
+                    )
+                }
+
+                Spacer(modifier = Modifier.height(12.dp))
+
+                // ROW 2: Quadrant 3 (Bottom-Left: Reports) & Quadrant 4 (Bottom-Right: Settings)
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(12.dp)
+                ) {
+                    QuadrantFeatureCard(
+                        quadrantLabel = "Quadrant 3 • Bottom-Left",
+                        title = if (isBn) "আর্থিক ও অডিট রিপোর্ট" else "Reports",
+                        subtitle = if (isBn) "মাসিক, বার্ষিক ও অডিট বিবরণী" else "Financial statements & audit logs",
+                        footerMetric = "নিট ফান্ড: ${NumberToWords.formatCurrency(repository.netAvailableFund, isBn)}",
+                        badgeText = if (isBn) "অডিট বিবরণী" else "Reports",
+                        actionCue = if (isBn) "রিপোর্ট →" else "Reports →",
+                        icon = Icons.Default.Assessment,
+                        gradient = listOf(Color(0xFF6D28D9), Color(0xFF8B5CF6)),
+                        testTag = "quadrant_card_reports",
+                        modifier = Modifier.weight(1f),
+                        onClick = onNavigateToReports
+                    )
+
+                    QuadrantFeatureCard(
+                        quadrantLabel = "Quadrant 4 • Bottom-Right",
+                        title = if (isBn) "সমিতি সেটিংস ও কনফিগ" else "Settings",
+                        subtitle = if (isBn) "সমিতি সেটআপ, ব্যাকআপ, ভাষা ও রুলস" else "Samity config, rules & backup",
+                        footerMetric = "${samity.samityType} • ফি: ${samity.defaultMonthlyFee.toInt()}৳",
+                        badgeText = if (isBn) "কনফিগ" else "Settings",
+                        actionCue = if (isBn) "কনফিগ →" else "Config →",
+                        icon = Icons.Default.Settings,
+                        gradient = listOf(Color(0xFFB45309), Color(0xFFF59E0B)),
+                        testTag = "quadrant_card_settings",
+                        modifier = Modifier.weight(1f),
+                        onClick = onNavigateToSettings
+                    )
+                }
+            }
+        }
+
         // Real-Time Multi-Device Sync & Scan Card
         item {
             Card(
@@ -1276,6 +1404,136 @@ fun DashboardFourCornerCard(
                     maxLines = 1,
                     overflow = TextOverflow.Ellipsis
                 )
+            }
+        }
+    }
+}
+
+@Composable
+fun QuadrantFeatureCard(
+    quadrantLabel: String,
+    title: String,
+    subtitle: String,
+    footerMetric: String,
+    badgeText: String,
+    actionCue: String,
+    icon: ImageVector,
+    gradient: List<Color>,
+    testTag: String,
+    modifier: Modifier = Modifier,
+    onClick: () -> Unit
+) {
+    Card(
+        shape = RoundedCornerShape(22.dp),
+        elevation = CardDefaults.cardElevation(defaultElevation = 4.dp, pressedElevation = 8.dp),
+        modifier = modifier
+            .clip(RoundedCornerShape(22.dp))
+            .clickable(onClick = onClick)
+            .testTag(testTag)
+    ) {
+        Box(
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(175.dp)
+                .background(Brush.linearGradient(gradient))
+                .padding(14.dp)
+        ) {
+            Column(
+                modifier = Modifier.fillMaxSize(),
+                verticalArrangement = Arrangement.SpaceBetween
+            ) {
+                // Top Row: Custom Icon Box + Badge
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Box(
+                        modifier = Modifier
+                            .size(42.dp)
+                            .clip(RoundedCornerShape(12.dp))
+                            .background(Color.White.copy(alpha = 0.22f))
+                            .border(BorderStroke(1.dp, Color.White.copy(alpha = 0.35f)), RoundedCornerShape(12.dp)),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Icon(
+                            imageVector = icon,
+                            contentDescription = title,
+                            tint = Color.White,
+                            modifier = Modifier.size(24.dp)
+                        )
+                    }
+
+                    Surface(
+                        shape = RoundedCornerShape(12.dp),
+                        color = Color.White.copy(alpha = 0.28f)
+                    ) {
+                        Text(
+                            text = badgeText,
+                            fontSize = 10.sp,
+                            fontWeight = FontWeight.Bold,
+                            color = Color.White,
+                            modifier = Modifier.padding(horizontal = 8.dp, vertical = 3.dp)
+                        )
+                    }
+                }
+
+                // Middle: Quadrant Label + Bold Title + Subtitle
+                Column {
+                    Text(
+                        text = quadrantLabel.uppercase(),
+                        fontSize = 9.sp,
+                        fontWeight = FontWeight.ExtraBold,
+                        color = Color.White.copy(alpha = 0.75f),
+                        letterSpacing = 0.8.sp
+                    )
+                    Text(
+                        text = title,
+                        fontSize = 15.5.sp,
+                        fontWeight = FontWeight.ExtraBold,
+                        color = Color.White,
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis
+                    )
+                    Spacer(modifier = Modifier.height(2.dp))
+                    Text(
+                        text = subtitle,
+                        fontSize = 10.5.sp,
+                        color = Color.White.copy(alpha = 0.88f),
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis
+                    )
+                }
+
+                // Bottom: Metric Footer + Action Cue
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Text(
+                        text = footerMetric,
+                        fontSize = 10.sp,
+                        fontWeight = FontWeight.SemiBold,
+                        color = Color.White.copy(alpha = 0.95f),
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis,
+                        modifier = Modifier.weight(1f, fill = false)
+                    )
+
+                    Surface(
+                        shape = RoundedCornerShape(8.dp),
+                        color = Color.White.copy(alpha = 0.2f)
+                    ) {
+                        Text(
+                            text = actionCue,
+                            fontSize = 9.5.sp,
+                            fontWeight = FontWeight.Bold,
+                            color = Color.White,
+                            modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp)
+                        )
+                    }
+                }
             }
         }
     }

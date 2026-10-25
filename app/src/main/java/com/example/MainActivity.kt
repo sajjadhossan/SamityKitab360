@@ -529,7 +529,34 @@ fun MainAppContent(repository: SamityRepository) {
                     onOpenDocumentGenerator = { currentScreen = Screen.DocumentGenerator },
                     onOpenAuditTrail = { currentScreen = Screen.AuditTrail },
                     onOpenApprovalWorkflow = { currentScreen = Screen.ApprovalWorkflow },
-                    onOpenBackupExport = { currentScreen = Screen.BackupExport }
+                    onOpenBackupExport = { currentScreen = Screen.BackupExport },
+                    canNavigateBack = (currentScreen !is Screen.Dashboard),
+                    onNavigateBack = { currentScreen = Screen.Dashboard },
+                    screenTitle = when (currentScreen) {
+                        is Screen.Members -> if (isBn) "সদস্য ব্যবস্থাপনা" else "Members"
+                        is Screen.Deposits -> if (isBn) "চাঁদা ও জমা" else "Deposits"
+                        is Screen.BulkDeposit -> if (isBn) "বাল্ক জমা স্লিপ" else "Bulk Slip"
+                        is Screen.PaymentStatus -> if (isBn) "আদায় ও বকেয়া" else "Payment Status"
+                        is Screen.Reminders -> if (isBn) "বকেয়া তাগিদ" else "Reminders"
+                        is Screen.Expenses -> if (isBn) "সমিতি ব্যয়" else "Expenses"
+                        is Screen.FundBalance -> if (isBn) "তহবিল ব্যালেন্স" else "Fund Balance"
+                        is Screen.Reports -> if (isBn) "আর্থিক রিপোর্ট" else "Reports"
+                        is Screen.Letterhead -> if (isBn) "লেটারহেড প্যাড" else "Letterhead"
+                        is Screen.DocumentGenerator -> if (isBn) "নথি জেনারেটর" else "Documents"
+                        is Screen.AuditTrail -> if (isBn) "অডিট ট্রেইল" else "Audit Trail"
+                        is Screen.SamitySetup -> if (isBn) "সমিতি সেটআপ" else "Samity Setup"
+                        is Screen.MemberPortal -> if (isBn) "সদস্য পোর্টাল" else "Member Portal"
+                        is Screen.LoginAndActivation -> if (isBn) "লগইন ও এক্টিভেশন" else "Login"
+                        is Screen.SaaSAdminControl -> if (isBn) "সাশ কন্ট্রোল" else "SaaS Control"
+                        is Screen.RolePermissionManager -> if (isBn) "রোল পারমিশন" else "Role Permissions"
+                        is Screen.VercelCloudSync -> if (isBn) "ভার্সেল সিঙ্ক" else "Cloud Sync"
+                        is Screen.ApprovalWorkflow -> if (isBn) "অনুমোদন ওয়ার্কফ্লো" else "Approvals"
+                        is Screen.BackupExport -> if (isBn) "ব্যাকআপ ও এক্সপোর্ট" else "Backup"
+                        is Screen.Settings -> if (isBn) "সিস্টেম সেটিংস" else "Settings"
+                        is Screen.ReceiptView -> if (isBn) "জমা মানিসিপ্ট" else "Receipt"
+                        is Screen.DueNoticeView -> if (isBn) "বকেয়া নোটিশ" else "Due Notice"
+                        else -> null
+                    }
                 )
             },
         bottomBar = {

@@ -8,6 +8,7 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -55,6 +56,9 @@ fun SamityTopAppBar(
     onOpenAuditTrail: () -> Unit = {},
     onOpenApprovalWorkflow: () -> Unit = {},
     onOpenBackupExport: () -> Unit = {},
+    canNavigateBack: Boolean = false,
+    onNavigateBack: () -> Unit = {},
+    screenTitle: String? = null,
     modifier: Modifier = Modifier
 ) {
     var showSamityModal by remember { mutableStateOf(false) }
@@ -72,15 +76,29 @@ fun SamityTopAppBar(
             actionIconContentColor = Color.White
         ),
         navigationIcon = {
-            IconButton(
-                onClick = onToggleDrawer,
-                modifier = Modifier.testTag("topbar_hamburger_menu_btn")
-            ) {
-                Icon(
-                    imageVector = Icons.Default.Menu,
-                    contentDescription = "Hamburger Navigation Menu",
-                    tint = Color.White
-                )
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                if (canNavigateBack) {
+                    IconButton(
+                        onClick = onNavigateBack,
+                        modifier = Modifier.testTag("topbar_back_btn")
+                    ) {
+                        Icon(
+                            imageVector = Icons.AutoMirrored.Filled.ArrowBack,
+                            contentDescription = "Back",
+                            tint = Color.White
+                        )
+                    }
+                }
+                IconButton(
+                    onClick = onToggleDrawer,
+                    modifier = Modifier.testTag("topbar_hamburger_menu_btn")
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.Menu,
+                        contentDescription = "Hamburger Navigation Menu",
+                        tint = Color.White
+                    )
+                }
             }
         },
         title = {
@@ -112,7 +130,7 @@ fun SamityTopAppBar(
                 Column {
                     Row(verticalAlignment = Alignment.CenterVertically) {
                         Text(
-                            text = LanguageManager.appTitle,
+                            text = screenTitle ?: LanguageManager.appTitle,
                             fontSize = 14.sp,
                             fontWeight = FontWeight.ExtraBold,
                             color = SamityGold,
