@@ -49,6 +49,9 @@ sealed class Screen {
     object SaaSAdminControl : Screen()
     object RolePermissionManager : Screen()
     object VercelCloudSync : Screen()
+    object ApprovalWorkflow : Screen()
+    object BackupExport : Screen()
+    object Settings : Screen()
     data class ReceiptView(val deposit: Deposit) : Screen()
     data class DueNoticeView(val member: Member) : Screen()
 }
@@ -93,7 +96,8 @@ fun MainAppContent(repository: SamityRepository) {
                 onOpenLogin = { currentScreen = Screen.LoginAndActivation },
                 onOpenSaaSControl = { currentScreen = Screen.SaaSAdminControl },
                 onOpenRolePermissions = { currentScreen = Screen.RolePermissionManager },
-                onOpenVercelSync = { currentScreen = Screen.VercelCloudSync }
+                onOpenVercelSync = { currentScreen = Screen.VercelCloudSync },
+                onOpenSettings = { currentScreen = Screen.Settings }
             )
         },
         bottomBar = {
@@ -104,7 +108,10 @@ fun MainAppContent(repository: SamityRepository) {
                 currentScreen !is Screen.LoginAndActivation &&
                 currentScreen !is Screen.SaaSAdminControl &&
                 currentScreen !is Screen.RolePermissionManager &&
-                currentScreen !is Screen.VercelCloudSync
+                currentScreen !is Screen.VercelCloudSync &&
+                currentScreen !is Screen.ApprovalWorkflow &&
+                currentScreen !is Screen.BackupExport &&
+                currentScreen !is Screen.Settings
             ) {
                 NavigationBar(
                     containerColor = Color.White,
@@ -244,6 +251,9 @@ fun MainAppContent(repository: SamityRepository) {
                                 onNavigateToDocumentGenerator = { currentScreen = Screen.DocumentGenerator },
                                 onNavigateToAuditTrail = { currentScreen = Screen.AuditTrail },
                                 onNavigateToSamitySetup = { currentScreen = Screen.SamitySetup },
+                                onNavigateToApprovalWorkflow = { currentScreen = Screen.ApprovalWorkflow },
+                                onNavigateToBackupExport = { currentScreen = Screen.BackupExport },
+                                onNavigateToSettings = { currentScreen = Screen.Settings },
                                 onViewReceipt = { dep -> currentScreen = Screen.ReceiptView(dep) },
                                 onNavigateToVercelSync = { currentScreen = Screen.VercelCloudSync }
                             )
@@ -519,6 +529,32 @@ fun MainAppContent(repository: SamityRepository) {
                     VercelCloudSyncScreen(
                         repository = repository,
                         onBack = { currentScreen = Screen.Dashboard }
+                    )
+                }
+
+                is Screen.ApprovalWorkflow -> {
+                    ApprovalWorkflowScreen(
+                        repository = repository,
+                        onBack = { currentScreen = Screen.Dashboard }
+                    )
+                }
+
+                is Screen.BackupExport -> {
+                    BackupExportScreen(
+                        repository = repository,
+                        onBack = { currentScreen = Screen.Dashboard }
+                    )
+                }
+
+                is Screen.Settings -> {
+                    SettingsScreen(
+                        repository = repository,
+                        onBack = { currentScreen = Screen.Dashboard },
+                        onNavigateToLetterhead = { currentScreen = Screen.Letterhead },
+                        onNavigateToBackup = { currentScreen = Screen.BackupExport },
+                        onNavigateToVercelSync = { currentScreen = Screen.VercelCloudSync },
+                        onNavigateToRoles = { currentScreen = Screen.RolePermissionManager },
+                        onNavigateToApprovals = { currentScreen = Screen.ApprovalWorkflow }
                     )
                 }
             }

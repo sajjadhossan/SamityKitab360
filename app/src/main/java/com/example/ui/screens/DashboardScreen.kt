@@ -45,6 +45,9 @@ fun DashboardScreen(
     onNavigateToDocumentGenerator: () -> Unit = {},
     onNavigateToAuditTrail: () -> Unit = {},
     onNavigateToSamitySetup: () -> Unit = {},
+    onNavigateToApprovalWorkflow: () -> Unit = {},
+    onNavigateToBackupExport: () -> Unit = {},
+    onNavigateToSettings: () -> Unit = {},
     onViewReceipt: (Deposit) -> Unit,
     onNavigateToVercelSync: () -> Unit = {},
     modifier: Modifier = Modifier
@@ -480,13 +483,13 @@ fun DashboardScreen(
                             Spacer(modifier = Modifier.width(10.dp))
                             Column {
                                 Text(
-                                    text = if (isBn) "১১টি মূল সেবা ও ইআরপি মডিউল" else "11 Core ERP Modules",
+                                    text = if (isBn) "২৮টি কোর মডিউল ও ইআরপি সেবা" else "28 Core ERP Modules & Services",
                                     fontWeight = FontWeight.Bold,
                                     fontSize = 14.sp,
                                     color = SamityNavyDark
                                 )
                                 Text(
-                                    text = if (isBn) "সমিতি পরিচালনার সকল ফিচার" else "All Management Features",
+                                    text = if (isBn) "সমিতি পরিচালনার সকল ফিচার ও সেবা" else "Complete ERP System Features",
                                     fontSize = 10.sp,
                                     color = Color(0xFF64748B)
                                 )
@@ -497,7 +500,7 @@ fun DashboardScreen(
                             color = Color(0xFFEFF6FF)
                         ) {
                             Text(
-                                text = if (isBn) "১১টি ফিচার সক্রিয়" else "11 Active",
+                                text = if (isBn) "২৮টি মডিউল সক্রিয়" else "28 Modules Active",
                                 color = SamityNavyPrimary,
                                 fontSize = 10.sp,
                                 fontWeight = FontWeight.Bold,
@@ -596,6 +599,38 @@ fun DashboardScreen(
                             icon = Icons.Default.Security,
                             iconColor = SamityNavyDark,
                             onClick = onNavigateToAuditTrail
+                        )
+                        ErpModuleItem(
+                            title = if (isBn) "১২. লেনদেন অনুমোদন ওয়ার্কফ্লো" else "12. Approval Workflow Hub",
+                            subtitle = if (isBn) "জমা ও ব্যয়ের প্রশাসনিক অনুমোদন ও পর্যালোচনা" else "Approve or reject deposits & expenses",
+                            badge = if (isBn) "অনুমোদন" else "Approvals",
+                            icon = Icons.Default.CheckCircle,
+                            iconColor = Color(0xFF10B981),
+                            onClick = onNavigateToApprovalWorkflow
+                        )
+                        ErpModuleItem(
+                            title = if (isBn) "১৩. ডাটাবেজ ব্যাকআপ, এক্সপোর্ট ও ইমপোর্ট" else "13. Database Backup & Export",
+                            subtitle = if (isBn) "সম্পূর্ণ ডাটা JSON ও CSV এক্সপোর্ট এবং ব্যাকআপ" else "Full database JSON & CSV exports",
+                            badge = if (isBn) "ব্যাকআপ" else "Backup",
+                            icon = Icons.Default.Backup,
+                            iconColor = Color(0xFF6366F1),
+                            onClick = onNavigateToBackupExport
+                        )
+                        ErpModuleItem(
+                            title = if (isBn) "১৪. সিস্টেম সেটিংস ও বহুভাষিক কনফিগারেশন" else "14. System Settings & Languages",
+                            subtitle = if (isBn) "বাংলা/ইংরেজি ভাষা, চাঁদা হার ও সিস্টেম সেটিংস" else "Language, fee config & preferences",
+                            badge = if (isBn) "সেটিংস" else "Settings",
+                            icon = Icons.Default.Settings,
+                            iconColor = Color(0xFF64748B),
+                            onClick = onNavigateToSettings
+                        )
+                        ErpModuleItem(
+                            title = if (isBn) "১৫. ভার্সেল ক্লাউড ও ওয়েব API গেটওয়ে" else "15. Vercel Cloud & Web API Gateway",
+                            subtitle = if (isBn) "ওয়েবসাইট ও মোবাইলের ডাটা একসাথে স্ক্যান ও সিঙ্ক" else "Bidirectional real-time web parity",
+                            badge = if (isBn) "ক্লাউড API" else "Cloud Sync",
+                            icon = Icons.Default.CloudSync,
+                            iconColor = SamityGold,
+                            onClick = onNavigateToVercelSync
                         )
                     }
                 }

@@ -462,6 +462,189 @@ class SamityRepository(
         return true
     }
 
+    // Approval Workflow Operations
+    fun approveDeposit(depositId: String): Boolean {
+        if (!userSession.canPerform(AppPermission.APPROVE_TRANSACTION, activeSamityId)) {
+            addSecurityAudit(
+                actionBn = "অননুমোদিত জমা অনুমোদন প্রচেষ্টা",
+                actionEn = "Unauthorized Deposit Approval Blocked",
+                details = "User ${userSession.currentUser.name} lacks APPROVE_TRANSACTION"
+            )
+            return false
+        }
+        val idx = deposits.indexOfFirst { it.id == depositId }
+        if (idx != -1) {
+            val dep = deposits[idx]
+            deposits[idx] = dep.copy(approvalStatus = "Approved")
+            addAudit(
+                actionBn = "জমা ভাউচার অনুমোদন",
+                actionEn = "Deposit Voucher Approved",
+                details = "Voucher: ${dep.voucherNo}, Member: ${dep.memberName}, Amount: ${dep.amount} ৳"
+            )
+            return true
+        }
+        return false
+    }
+
+    fun rejectDeposit(depositId: String, reason: String = ""): Boolean {
+        if (!userSession.canPerform(AppPermission.APPROVE_TRANSACTION, activeSamityId)) {
+            addSecurityAudit(
+                actionBn = "অননুমোদিত জমা বাতিল প্রচেষ্টা",
+                actionEn = "Unauthorized Deposit Rejection Blocked",
+                details = "User ${userSession.currentUser.name} lacks APPROVE_TRANSACTION"
+            )
+            return false
+        }
+        val idx = deposits.indexOfFirst { it.id == depositId }
+        if (idx != -1) {
+            val dep = deposits[idx]
+            deposits[idx] = dep.copy(approvalStatus = "Rejected", remarks = (dep.remarks + " [বাতিল: $reason]").trim())
+            addAudit(
+                actionBn = "জমা ভাউচার বাতিল",
+                actionEn = "Deposit Voucher Rejected",
+                details = "Voucher: ${dep.voucherNo}, Reason: $reason"
+            )
+            return true
+        }
+        return false
+    }
+
+    fun approveExpense(expenseId: String): Boolean {
+        if (!userSession.canPerform(AppPermission.APPROVE_TRANSACTION, activeSamityId)) {
+            addSecurityAudit(
+                actionBn = "অননুমোদিত ব্যয় অনুমোদন প্রচেষ্টা",
+                actionEn = "Unauthorized Expense Approval Blocked",
+                details = "User ${userSession.currentUser.name} lacks APPROVE_TRANSACTION"
+            )
+            return false
+        }
+        val idx = expenses.indexOfFirst { it.id == expenseId }
+        if (idx != -1) {
+            val exp = expenses[idx]
+            expenses[idx] = exp.copy(approvalStatus = "Approved")
+            addAudit(
+                actionBn = "ব্যয় ভাউচার অনুমোদন",
+                actionEn = "Expense Voucher Approved",
+                details = "Voucher: ${exp.voucherNo}, Title: ${exp.titleBn}, Amount: ${exp.amount} ৳"
+            )
+            return true
+        }
+        return false
+    }
+
+    fun rejectExpense(expenseId: String, reason: String = ""): Boolean {
+        if (!userSession.canPerform(AppPermission.APPROVE_TRANSACTION, activeSamityId)) {
+            addSecurityAudit(
+                actionBn = "অননুমোদিত ব্যয় বাতিল প্রচেষ্টা",
+                actionEn = "Unauthorized Expense Rejection Blocked",
+                details = "User ${userSession.currentUser.name} lacks APPROVE_TRANSACTION"
+            )
+            return false
+        }
+        val idx = expenses.indexOfFirst { it.id == expenseId }
+        if (idx != -1) {
+            val exp = expenses[idx]
+            expenses[idx] = exp.copy(approvalStatus = "Rejected", description = (exp.description + " [বাতিল: $reason]").trim())
+            addAudit(
+                actionBn = "ব্যয় ভাউচার বাতিল",
+                actionEn = "Expense Voucher Rejected",
+                details = "Voucher: ${exp.voucherNo}, Reason: $reason"
+            )
+            return true
+        }
+        return false
+    }
+
+    // Backup & Export Operations (JSON / CSV)
+    fun exportBackupJson(): String {
+        val root = org.json.JSONObject()
+        root.put("version", "1.0.0")
+        root.put("exportTimestamp", SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.getDefault()).format(Date()))
+        root.put("activeSamityId", activeSamityId)
+
+        val samitiesArray = org.json.JSONArray()
+        samities.forEach { s ->
+            val obj = org.json.JSONObject()
+            obj.put("id", s.id)
+            obj.put("nameBn", s.nameBn)
+            obj.put("nameEn", s.nameEn)
+            obj.put("regNo", s.regNo)
+            obj.put("addressBn", s.addressBn)
+            obj.put("phone", s.phone)
+            obj.put("bankName", s.bankName)
+            obj.put("bankAccountNo", s.bankAccountNo)
+            obj.put("defaultMonthlyFee", s.defaultMonthlyFee)
+            samitiesArray.put(obj)
+        }
+        root.put("samities", samitiesArray)
+
+        val membersArray = org.json.JSONArray()
+        getMembers().forEach { m ->
+            val obj = org.json.JSONObject()
+            obj.put("id", m.id)
+            obj.put("samityId", m.samityId)
+            obj.put("memberCode", m.memberCode)
+            obj.put("nameBn", m.nameBn)
+            obj.put("phone", m.phone)
+            obj.put("monthlyFee", m.monthlyFee)
+            obj.put("totalPaid", m.totalPaid)
+            obj.put("totalDue", m.totalDue)
+            membersArray.put(obj)
+        }
+        root.put("members", membersArray)
+
+        val depositsArray = org.json.JSONArray()
+        getDeposits().forEach { d ->
+            val obj = org.json.JSONObject()
+            obj.put("id", d.id)
+            obj.put("samityId", d.samityId)
+            obj.put("voucherNo", d.voucherNo)
+            obj.put("memberName", d.memberName)
+            obj.put("memberCode", d.memberCode)
+            obj.put("amount", d.amount)
+            obj.put("depositDate", d.depositDate)
+            obj.put("depositMethod", d.depositMethod)
+            obj.put("approvalStatus", d.approvalStatus)
+            depositsArray.put(obj)
+        }
+        root.put("deposits", depositsArray)
+
+        val expensesArray = org.json.JSONArray()
+        getExpenses().forEach { e ->
+            val obj = org.json.JSONObject()
+            obj.put("id", e.id)
+            obj.put("samityId", e.samityId)
+            obj.put("voucherNo", e.voucherNo)
+            obj.put("titleBn", e.titleBn)
+            obj.put("amount", e.amount)
+            obj.put("category", e.category)
+            obj.put("paymentMethod", e.paymentMethod)
+            obj.put("approvalStatus", e.approvalStatus)
+            expensesArray.put(obj)
+        }
+        root.put("expenses", expensesArray)
+
+        return root.toString(2)
+    }
+
+    fun exportMembersCsv(): String {
+        val sb = StringBuilder()
+        sb.append("MemberCode,NameBn,Phone,MonthlyFee,TotalPaid,TotalDue,Status\n")
+        getMembers().forEach { m ->
+            sb.append("\"${m.memberCode}\",\"${m.nameBn}\",\"${m.phone}\",${m.monthlyFee},${m.totalPaid},${m.totalDue},\"${m.status}\"\n")
+        }
+        return sb.toString()
+    }
+
+    fun exportDepositsCsv(): String {
+        val sb = StringBuilder()
+        sb.append("VoucherNo,Date,MemberCode,MemberName,Amount,Method,ApprovalStatus\n")
+        getDeposits().forEach { d ->
+            sb.append("\"${d.voucherNo}\",\"${d.depositDate}\",\"${d.memberCode}\",\"${d.memberName}\",${d.amount},\"${d.depositMethod}\",\"${d.approvalStatus}\"\n")
+        }
+        return sb.toString()
+    }
+
     // Samity Creation with Authorization Check
     fun createSamity(newSamity: Samity): Boolean {
         if (!userSession.canPerform(AppPermission.MANAGE_SAMITY_CONFIG)) {

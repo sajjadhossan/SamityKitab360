@@ -34,6 +34,7 @@ fun SamityTopAppBar(
     onOpenSaaSControl: () -> Unit,
     onOpenRolePermissions: () -> Unit,
     onOpenVercelSync: () -> Unit = {},
+    onOpenSettings: () -> Unit = {},
     modifier: Modifier = Modifier
 ) {
     var showSamityMenu by remember { mutableStateOf(false) }
@@ -254,6 +255,31 @@ fun SamityTopAppBar(
                             Icon(Icons.Default.CloudDone, contentDescription = null, tint = Color(0xFF10B981))
                         }
                     )
+
+                    DropdownMenuItem(
+                        text = {
+                            Column {
+                                Text(
+                                    text = if (isBn) "সিস্টেম সেটিংস ও ভাষা" else "System Settings & Language",
+                                    color = SamityNavyPrimary,
+                                    fontWeight = FontWeight.Bold,
+                                    fontSize = 13.sp
+                                )
+                                Text(
+                                    text = if (isBn) "ভাষা, চাঁদা হার ও সিস্টেম কনফিগারেশন" else "Preferences, fee config & backup",
+                                    fontSize = 10.sp,
+                                    color = Color.Gray
+                                )
+                            }
+                        },
+                        onClick = {
+                            showSamityMenu = false
+                            onOpenSettings()
+                        },
+                        leadingIcon = {
+                            Icon(Icons.Default.Settings, contentDescription = null, tint = SamityNavyPrimary)
+                        }
+                    )
                 }
             }
         },
@@ -284,14 +310,14 @@ fun SamityTopAppBar(
                 }
             }
 
-            // Login & Account Switcher Icon
+            // Settings Icon
             IconButton(
-                onClick = onOpenLogin,
-                modifier = Modifier.testTag("open_login_btn")
+                onClick = onOpenSettings,
+                modifier = Modifier.testTag("open_settings_topbar_btn")
             ) {
                 Icon(
-                    imageVector = Icons.Default.AccountCircle,
-                    contentDescription = "Login & Activation",
+                    imageVector = Icons.Default.Settings,
+                    contentDescription = "Settings",
                     tint = Color.White
                 )
             }
