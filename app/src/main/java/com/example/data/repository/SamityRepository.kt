@@ -81,6 +81,26 @@ class SamityRepository(
     init {
         seedInitialData()
         seedRoomDatabase()
+        roomFirestoreSync?.onRemoteDepositReceived = { remoteDep ->
+            if (remoteDep.samityId == activeSamityId && deposits.none { it.id == remoteDep.id || (it.voucherNo == remoteDep.voucherNo && it.voucherNo.isNotBlank()) }) {
+                deposits.add(0, remoteDep)
+                val memIndex = members.indexOfFirst { it.id == remoteDep.memberId }
+                if (memIndex != -1) {
+                    val m = members[memIndex]
+                    members[memIndex] = m.copy(
+                        totalPaid = m.totalPaid + remoteDep.amount,
+                        totalDue = (m.totalDue - remoteDep.amount).coerceAtLeast(0.0)
+                    )
+                }
+                syncEngine.broadcastDeposit(remoteDep, originDevice = "ক্লাউড সিঙ্ক (অন্যান্য মোবাইল / ওয়েব)")
+            }
+        }
+        roomFirestoreSync?.onRemoteMemberReceived = { remoteMem ->
+            if (remoteMem.samityId == activeSamityId && members.none { it.id == remoteMem.id || it.memberCode == remoteMem.memberCode }) {
+                members.add(remoteMem)
+            }
+        }
+        roomFirestoreSync?.startRealtimeCloudSync(activeSamityId)
     }
 
     private fun seedRoomDatabase() {
@@ -310,6 +330,7 @@ class SamityRepository(
             return false
         }
         activeSamityId = newSamityId
+        roomFirestoreSync?.startRealtimeCloudSync(newSamityId)
         userSession.switchSamity(newSamityId)
         letterheadConfig = letterheadConfig.copy(samityId = newSamityId)
         addAudit(
@@ -335,6 +356,22 @@ class SamityRepository(
             actionBn = "ইউজার রোল পরিবর্তন",
             actionEn = "Switched User Role",
             details = "Active view changed to: ${role.titleEn} (${role.titleBn}) for user: ${userSession.currentUser.name}"
+        )
+    }
+
+    /**
+     * Clears user session, signs out of Firebase Auth, and resets active role.
+     */
+    fun logout() {
+        userSession.logout()
+        try {
+            com.google.firebase.auth.FirebaseAuth.getInstance().signOut()
+        } catch (_: Throwable) {}
+        currentUserRole = UserRole.GENERAL_MEMBER
+        addAudit(
+            actionBn = "ব্যবহারকারী লগআউট",
+            actionEn = "User Logged Out",
+            details = "User session cleared and logged out."
         )
     }
 

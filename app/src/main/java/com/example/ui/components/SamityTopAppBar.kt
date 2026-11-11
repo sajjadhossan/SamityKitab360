@@ -9,6 +9,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.automirrored.filled.Logout
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -58,6 +59,8 @@ fun SamityTopAppBar(
     onOpenBackupExport: () -> Unit = {},
     canNavigateBack: Boolean = false,
     onNavigateBack: () -> Unit = {},
+    onLogout: () -> Unit = {},
+    onExitApp: () -> Unit = {},
     screenTitle: String? = null,
     modifier: Modifier = Modifier
 ) {
@@ -499,6 +502,52 @@ fun SamityTopAppBar(
                         },
                         leadingIcon = { Icon(Icons.Default.Lock, contentDescription = null, tint = SamityNavyPrimary) }
                     )
+
+                    Divider()
+
+                    DropdownMenuItem(
+                        text = {
+                            Text(
+                                text = if (isBn) "লগআউট (Logout)" else "Logout",
+                                color = Color(0xFFDC2626),
+                                fontWeight = FontWeight.SemiBold
+                            )
+                        },
+                        onClick = {
+                            showThreeDotMenu = false
+                            onLogout()
+                        },
+                        leadingIcon = {
+                            Icon(
+                                Icons.AutoMirrored.Filled.Logout,
+                                contentDescription = "Logout",
+                                tint = Color(0xFFDC2626)
+                            )
+                        },
+                        modifier = Modifier.testTag("topbar_menu_logout_btn")
+                    )
+
+                    DropdownMenuItem(
+                        text = {
+                            Text(
+                                text = if (isBn) "অ্যাপ বন্ধ / প্রস্থান (Exit)" else "Exit Application",
+                                color = Color(0xFF475569),
+                                fontWeight = FontWeight.SemiBold
+                            )
+                        },
+                        onClick = {
+                            showThreeDotMenu = false
+                            onExitApp()
+                        },
+                        leadingIcon = {
+                            Icon(
+                                Icons.Default.ExitToApp,
+                                contentDescription = "Exit App",
+                                tint = Color(0xFF475569)
+                            )
+                        },
+                        modifier = Modifier.testTag("topbar_menu_exit_btn")
+                    )
                 }
             }
         }
@@ -577,6 +626,14 @@ fun SamityTopAppBar(
             onOpenSettings = {
                 showSamityModal = false
                 onOpenSettings()
+            },
+            onLogout = {
+                showSamityModal = false
+                onLogout()
+            },
+            onExitApp = {
+                showSamityModal = false
+                onExitApp()
             }
         )
     }
@@ -610,7 +667,9 @@ fun SamityQuickAccessModal(
     onOpenBackupExport: () -> Unit,
     onOpenRolePermissions: () -> Unit,
     onOpenSaaSControl: () -> Unit,
-    onOpenSettings: () -> Unit
+    onOpenSettings: () -> Unit,
+    onLogout: () -> Unit = {},
+    onExitApp: () -> Unit = {}
 ) {
     val active = repository.activeSamity
 
@@ -910,12 +969,69 @@ fun SamityQuickAccessModal(
 
                 Spacer(modifier = Modifier.height(16.dp))
 
+                // Account Logout and Exit App Actions
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    OutlinedButton(
+                        onClick = onLogout,
+                        modifier = Modifier
+                            .weight(1f)
+                            .height(44.dp)
+                            .testTag("modal_logout_btn"),
+                        shape = RoundedCornerShape(12.dp),
+                        colors = ButtonDefaults.outlinedButtonColors(contentColor = Color(0xFFDC2626))
+                    ) {
+                        Icon(
+                            imageVector = Icons.AutoMirrored.Filled.Logout,
+                            contentDescription = "Logout",
+                            modifier = Modifier.size(16.dp),
+                            tint = Color(0xFFDC2626)
+                        )
+                        Spacer(modifier = Modifier.width(6.dp))
+                        Text(
+                            text = if (isBn) "লগআউট" else "Logout",
+                            fontWeight = FontWeight.Bold,
+                            fontSize = 12.sp,
+                            color = Color(0xFFDC2626)
+                        )
+                    }
+
+                    OutlinedButton(
+                        onClick = onExitApp,
+                        modifier = Modifier
+                            .weight(1f)
+                            .height(44.dp)
+                            .testTag("modal_exit_app_btn"),
+                        shape = RoundedCornerShape(12.dp),
+                        colors = ButtonDefaults.outlinedButtonColors(contentColor = Color(0xFF475569))
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.ExitToApp,
+                            contentDescription = "Exit App",
+                            modifier = Modifier.size(16.dp),
+                            tint = Color(0xFF475569)
+                        )
+                        Spacer(modifier = Modifier.width(6.dp))
+                        Text(
+                            text = if (isBn) "অ্যাপ বন্ধ" else "Exit App",
+                            fontWeight = FontWeight.Bold,
+                            fontSize = 12.sp,
+                            color = Color(0xFF475569)
+                        )
+                    }
+                }
+
+                Spacer(modifier = Modifier.height(8.dp))
+
                 // Close Button
                 Button(
                     onClick = onDismiss,
                     modifier = Modifier
                         .fillMaxWidth()
-                        .height(46.dp),
+                        .height(46.dp)
+                        .testTag("modal_close_btn"),
                     shape = RoundedCornerShape(12.dp),
                     colors = ButtonDefaults.buttonColors(containerColor = SamityNavyPrimary)
                 ) {

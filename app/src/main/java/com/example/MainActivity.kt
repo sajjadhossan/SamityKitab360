@@ -1,5 +1,6 @@
 package com.example
 
+import android.app.Activity
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.BackHandler
@@ -13,6 +14,7 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.Logout
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -22,6 +24,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
@@ -92,10 +95,13 @@ class MainActivity : ComponentActivity() {
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun MainAppContent(repository: SamityRepository) {
+    val context = LocalContext.current
     val isBn = LanguageManager.isBangla
     var currentScreen by remember { mutableStateOf<Screen>(Screen.Dashboard) }
     val drawerState = rememberDrawerState(initialValue = DrawerValue.Closed)
     val coroutineScope = rememberCoroutineScope()
+    var showLogoutConfirmDialog by remember { mutableStateOf(false) }
+    var showExitConfirmDialog by remember { mutableStateOf(false) }
 
     // Navigation back stack handler
     BackHandler(enabled = drawerState.isOpen) {
@@ -495,6 +501,33 @@ fun MainAppContent(repository: SamityRepository) {
                         }
                     )
 
+                    Divider(modifier = Modifier.padding(horizontal = 16.dp, vertical = 6.dp))
+
+                    DrawerSectionHeader(title = if (isBn) "অ্যাকাউন্ট ও প্রস্থান" else "Account & Exit")
+
+                    DrawerItem(
+                        title = if (isBn) "লগআউট (Logout)" else "Logout",
+                        icon = Icons.AutoMirrored.Filled.Logout,
+                        selected = false,
+                        badgeText = if (isBn) "বাহির" else "Exit",
+                        iconColor = Color(0xFFDC2626),
+                        onClick = {
+                            coroutineScope.launch { drawerState.close() }
+                            showLogoutConfirmDialog = true
+                        }
+                    )
+
+                    DrawerItem(
+                        title = if (isBn) "অ্যাপ প্রস্থান / বন্ধ" else "Exit Application",
+                        icon = Icons.Default.ExitToApp,
+                        selected = false,
+                        iconColor = Color(0xFF475569),
+                        onClick = {
+                            coroutineScope.launch { drawerState.close() }
+                            showExitConfirmDialog = true
+                        }
+                    )
+
                     Spacer(modifier = Modifier.height(24.dp))
 
                     // Drawer Footer
@@ -558,6 +591,8 @@ fun MainAppContent(repository: SamityRepository) {
                     onOpenBackupExport = { currentScreen = Screen.BackupExport },
                     canNavigateBack = (currentScreen !is Screen.Dashboard),
                     onNavigateBack = { currentScreen = Screen.Dashboard },
+                    onLogout = { showLogoutConfirmDialog = true },
+                    onExitApp = { showExitConfirmDialog = true },
                     screenTitle = when (currentScreen) {
                         is Screen.Members -> if (isBn) "সদস্য ব্যবস্থাপনা" else "Members"
                         is Screen.Deposits -> if (isBn) "চাঁদা ও জমা" else "Deposits"
@@ -1080,6 +1115,101 @@ fun MainAppContent(repository: SamityRepository) {
 }
 }
 }
+
+    if (showLogoutConfirmDialog) {
+        AlertDialog(
+            onDismissRequest = { showLogoutConfirmDialog = false },
+            icon = {
+                Icon(
+                    imageVector = Icons.AutoMirrored.Filled.Logout,
+                    contentDescription = "Logout",
+                    tint = Color(0xFFDC2626)
+                )
+            },
+            title = {
+                Text(
+                    text = if (isBn) "লগআউট নিশ্চিতকরণ" else "Confirm Logout",
+                    fontWeight = FontWeight.Bold
+                )
+            },
+            text = {
+                Text(
+                    text = if (isBn)
+                        "আপনি কি আপনার বর্তমান অ্যাকাউন্ট থেকে লগআউট করতে চান? আপনার স্থানীয় ও ক্লাউড সংরক্ষিত ডাটা নিরাপদ থাকবে।"
+                    else
+                        "Are you sure you want to log out from your current account? All your local and synced data will remain safe."
+                )
+            },
+            confirmButton = {
+                Button(
+                    onClick = {
+                        showLogoutConfirmDialog = false
+                        repository.logout()
+                        currentScreen = Screen.LoginAndActivation
+                    },
+                    colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFDC2626)),
+                    modifier = Modifier.testTag("confirm_logout_dialog_btn")
+                ) {
+                    Text(if (isBn) "লগআউট করুন" else "Log Out", color = Color.White)
+                }
+            },
+            dismissButton = {
+                TextButton(
+                    onClick = { showLogoutConfirmDialog = false },
+                    modifier = Modifier.testTag("cancel_logout_dialog_btn")
+                ) {
+                    Text(if (isBn) "বাতিল" else "Cancel")
+                }
+            }
+        )
+    }
+
+    if (showExitConfirmDialog) {
+        AlertDialog(
+            onDismissRequest = { showExitConfirmDialog = false },
+            icon = {
+                Icon(
+                    imageVector = Icons.Default.ExitToApp,
+                    contentDescription = "Exit App",
+                    tint = Color(0xFF475569)
+                )
+            },
+            title = {
+                Text(
+                    text = if (isBn) "অ্যাপ প্রস্থান" else "Exit Application",
+                    fontWeight = FontWeight.Bold
+                )
+            },
+            text = {
+                Text(
+                    text = if (isBn)
+                        "আপনি কি নিশ্চিতভাবে 'সমিতি কিতাব ৩৬০' অ্যাপটি বন্ধ করতে চান?"
+                    else
+                        "Are you sure you want to close and exit Samity Kitab 360?"
+                )
+            },
+            confirmButton = {
+                Button(
+                    onClick = {
+                        showExitConfirmDialog = false
+                        (context as? Activity)?.finishAffinity()
+                    },
+                    colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF475569)),
+                    modifier = Modifier.testTag("confirm_exit_dialog_btn")
+                ) {
+                    Text(if (isBn) "প্রস্থান করুন" else "Exit", color = Color.White)
+                }
+            },
+            dismissButton = {
+                TextButton(
+                    onClick = { showExitConfirmDialog = false },
+                    modifier = Modifier.testTag("cancel_exit_dialog_btn")
+                ) {
+                    Text(if (isBn) "বাতিল" else "Cancel")
+                }
+            }
+        )
+    }
 }
 
 @Composable

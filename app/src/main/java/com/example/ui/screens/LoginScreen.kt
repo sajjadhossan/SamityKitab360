@@ -98,10 +98,6 @@ fun LoginScreen(
 
     // Forgot Password Dialog State
     var showForgotPasswordDialog by remember { mutableStateOf(false) }
-    var resetEmail by remember { mutableStateOf("") }
-    var resetDialogError by remember { mutableStateOf<String?>(null) }
-    var resetDialogSuccess by remember { mutableStateOf(false) }
-    var isResetLoading by remember { mutableStateOf(false) }
 
     // Validation helpers
     val isEmailValid = email.isNotBlank() && Patterns.EMAIL_ADDRESS.matcher(email.trim()).matches()
@@ -443,12 +439,7 @@ fun LoginScreen(
                             horizontalArrangement = Arrangement.End
                         ) {
                             TextButton(
-                                onClick = {
-                                    resetEmail = email.trim()
-                                    resetDialogError = null
-                                    resetDialogSuccess = false
-                                    showForgotPasswordDialog = true
-                                },
+                                onClick = { showForgotPasswordDialog = true },
                                 modifier = Modifier.testTag("forgot_password_button")
                             ) {
                                 Text(
@@ -679,109 +670,243 @@ fun LoginScreen(
 
     // Forgot Password Dialog
     if (showForgotPasswordDialog) {
-        AlertDialog(
-            onDismissRequest = {
-                if (!isResetLoading) showForgotPasswordDialog = false
-            },
-            title = {
-                Row(verticalAlignment = Alignment.CenterVertically) {
-                    Icon(
-                        imageVector = Icons.Default.LockReset,
-                        contentDescription = null,
-                        tint = SamityNavyPrimary
-                    )
-                    Spacer(modifier = Modifier.width(8.dp))
-                    Text(text = "Reset Password", fontWeight = FontWeight.Bold, fontSize = 18.sp)
-                }
-            },
-            text = {
-                Column {
-                    Text(
-                        text = "Enter your registered email address to receive a secure password reset link via Firebase Auth.",
-                        fontSize = 13.sp,
-                        color = Color(0xFF475569)
-                    )
+        ForgotPasswordDialog(
+            initialEmail = email.trim(),
+            onDismiss = { showForgotPasswordDialog = false },
+            onResetSent = { sentEmail ->
+                successMessage = "Password reset link sent to $sentEmail. Check your inbox."
+            }
+        )
+    }
+}
 
-                    Spacer(modifier = Modifier.height(14.dp))
+/**
+ * Material3 'Forgot Password' Dialog that allows users to trigger a Firebase password reset email.
+ * Includes email validation, real-time error handling, loading states, and test tags.
+ */
+@Composable
+fun ForgotPasswordDialog(
+    initialEmail: String = "",
+    onDismiss: () -> Unit,
+    onResetSent: (String) -> Unit = {}
+) {
+    val scope = rememberCoroutineScope()
+    val auth = remember { Firebase.auth }
 
-                    OutlinedTextField(
-                        value = resetEmail,
-                        onValueChange = {
-                            resetEmail = it
-                            resetDialogError = null
-                        },
-                        label = { Text("Email Address") },
-                        leadingIcon = { Icon(Icons.Default.Email, contentDescription = null) },
-                        singleLine = true,
-                        isError = resetDialogError != null,
-                        supportingText = {
-                            if (resetDialogError != null) {
-                                Text(text = resetDialogError!!, color = MaterialTheme.colorScheme.error)
+    var email by remember { mutableStateOf(initialEmail) }
+    var emailTouched by remember { mutableStateOf(initialEmail.isNotBlank()) }
+    var isLoading by remember { mutableStateOf(false) }
+    var errorMessage by remember { mutableStateOf<String?>(null) }
+    var isSuccess by remember { mutableStateOf(false) }
+
+    val isEmailValid = email.isNotBlank() && Patterns.EMAIL_ADDRESS.matcher(email.trim()).matches()
+    val emailErrorText = when {
+        !emailTouched -> null
+        email.isBlank() -> "Email address is required"
+        !isEmailValid -> "Enter a valid email address (e.g. user@example.com)"
+        else -> null
+    }
+
+    AlertDialog(
+        onDismissRequest = {
+            if (!isLoading) onDismiss()
+        },
+        modifier = Modifier.testTag("forgot_password_dialog"),
+        icon = {
+            Box(
+                modifier = Modifier
+                    .size(48.dp)
+                    .clip(CircleShape)
+                    .background(SamityNavyPrimary.copy(alpha = 0.12f)),
+                contentAlignment = Alignment.Center
+            ) {
+                Icon(
+                    imageVector = Icons.Default.LockReset,
+                    contentDescription = null,
+                    tint = SamityNavyPrimary,
+                    modifier = Modifier.size(26.dp)
+                )
+            }
+        },
+        title = {
+            Text(
+                text = "Forgot Password?",
+                fontWeight = FontWeight.Bold,
+                fontSize = 18.sp,
+                color = SamityNavyDark,
+                textAlign = TextAlign.Center,
+                modifier = Modifier.fillMaxWidth()
+            )
+        },
+        text = {
+            Column(modifier = Modifier.fillMaxWidth()) {
+                Text(
+                    text = "Enter your registered account email address. Firebase will send a secure password reset link to your inbox.",
+                    fontSize = 13.sp,
+                    color = Color(0xFF475569),
+                    lineHeight = 18.sp
+                )
+
+                Spacer(modifier = Modifier.height(16.dp))
+
+                OutlinedTextField(
+                    value = email,
+                    onValueChange = {
+                        email = it
+                        emailTouched = true
+                        errorMessage = null
+                    },
+                    label = { Text("Registered Email") },
+                    placeholder = { Text("user@example.com") },
+                    leadingIcon = {
+                        Icon(
+                            imageVector = Icons.Default.Email,
+                            contentDescription = null,
+                            tint = if (emailErrorText != null || errorMessage != null) {
+                                MaterialTheme.colorScheme.error
+                            } else {
+                                SamityNavyPrimary
                             }
-                        },
-                        modifier = Modifier.fillMaxWidth()
-                    )
-
-                    if (resetDialogSuccess) {
-                        Spacer(modifier = Modifier.height(10.dp))
-                        Surface(
-                            shape = RoundedCornerShape(8.dp),
-                            color = Color(0xFFECFDF5)
-                        ) {
+                        )
+                    },
+                    trailingIcon = {
+                        if (email.isNotEmpty()) {
+                            IconButton(onClick = { email = "" }) {
+                                Icon(
+                                    imageVector = Icons.Default.Clear,
+                                    contentDescription = "Clear email",
+                                    tint = Color.Gray
+                                )
+                            }
+                        }
+                    },
+                    singleLine = true,
+                    isError = emailErrorText != null || errorMessage != null,
+                    supportingText = {
+                        val text = emailErrorText ?: errorMessage
+                        if (text != null) {
                             Text(
-                                text = "Password reset email sent! Check your inbox.",
+                                text = text,
+                                color = MaterialTheme.colorScheme.error,
+                                fontSize = 12.sp
+                            )
+                        }
+                    },
+                    keyboardOptions = KeyboardOptions(
+                        keyboardType = KeyboardType.Email,
+                        imeAction = ImeAction.Done
+                    ),
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .testTag("forgot_password_email_input")
+                )
+
+                if (isSuccess) {
+                    Spacer(modifier = Modifier.height(12.dp))
+                    Surface(
+                        shape = RoundedCornerShape(10.dp),
+                        color = Color(0xFFECFDF5),
+                        border = androidx.compose.foundation.BorderStroke(1.dp, Color(0xFFA7F3D0)),
+                        modifier = Modifier.fillMaxWidth()
+                    ) {
+                        Row(
+                            modifier = Modifier.padding(12.dp),
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Icon(
+                                imageVector = Icons.Default.CheckCircle,
+                                contentDescription = null,
+                                tint = Color(0xFF059669),
+                                modifier = Modifier.size(20.dp)
+                            )
+                            Spacer(modifier = Modifier.width(8.dp))
+                            Text(
+                                text = "Password reset email sent! Check your inbox and spam folder to set a new password.",
                                 color = Color(0xFF065F46),
-                                fontSize = 12.sp,
-                                fontWeight = FontWeight.Bold,
-                                modifier = Modifier.padding(10.dp)
+                                fontSize = 12.5.sp,
+                                fontWeight = FontWeight.SemiBold,
+                                lineHeight = 16.sp,
+                                modifier = Modifier.weight(1f)
                             )
                         }
                     }
                 }
-            },
-            confirmButton = {
+            }
+        },
+        confirmButton = {
+            if (!isSuccess) {
                 Button(
                     onClick = {
-                        val trimmed = resetEmail.trim()
-                        if (trimmed.isBlank() || !Patterns.EMAIL_ADDRESS.matcher(trimmed).matches()) {
-                            resetDialogError = "Please enter a valid email address."
+                        emailTouched = true
+                        val trimmed = email.trim()
+                        if (!isEmailValid) {
+                            errorMessage = "Please enter a valid email address."
                             return@Button
                         }
-                        isResetLoading = true
-                        resetDialogError = null
+
+                        isLoading = true
+                        errorMessage = null
+
                         scope.launch {
                             try {
                                 auth.sendPasswordResetEmail(trimmed).await()
-                                resetDialogSuccess = true
+                                isSuccess = true
+                                onResetSent(trimmed)
+                            } catch (e: FirebaseAuthInvalidUserException) {
+                                errorMessage = "No account found with this email. Please check your email or sign up."
+                            } catch (e: FirebaseAuthInvalidCredentialsException) {
+                                errorMessage = "Invalid email format. Please check for errors."
                             } catch (e: Exception) {
-                                resetDialogError = e.localizedMessage ?: "Failed to send reset email"
+                                errorMessage = e.localizedMessage ?: "Failed to send password reset email."
                             } finally {
-                                isResetLoading = false
+                                isLoading = false
                             }
                         }
                     },
-                    enabled = !isResetLoading && !resetDialogSuccess,
-                    colors = ButtonDefaults.buttonColors(containerColor = SamityNavyPrimary)
+                    enabled = !isLoading,
+                    shape = RoundedCornerShape(10.dp),
+                    colors = ButtonDefaults.buttonColors(containerColor = SamityNavyPrimary),
+                    modifier = Modifier.testTag("send_password_reset_button")
                 ) {
-                    if (isResetLoading) {
+                    if (isLoading) {
                         CircularProgressIndicator(
                             modifier = Modifier.size(16.dp),
                             color = Color.White,
                             strokeWidth = 2.dp
                         )
+                        Spacer(modifier = Modifier.width(8.dp))
+                        Text("Sending...", fontSize = 14.sp)
+                    } else {
+                        Icon(
+                            imageVector = Icons.Default.Send,
+                            contentDescription = null,
+                            modifier = Modifier.size(16.dp)
+                        )
                         Spacer(modifier = Modifier.width(6.dp))
+                        Text("Send Reset Link", fontWeight = FontWeight.Bold, fontSize = 14.sp)
                     }
-                    Text("Send Reset Link")
                 }
-            },
-            dismissButton = {
-                TextButton(
-                    onClick = { showForgotPasswordDialog = false },
-                    enabled = !isResetLoading
+            } else {
+                Button(
+                    onClick = onDismiss,
+                    shape = RoundedCornerShape(10.dp),
+                    colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF059669)),
+                    modifier = Modifier.testTag("done_password_reset_button")
                 ) {
-                    Text(if (resetDialogSuccess) "Close" else "Cancel")
+                    Text("Done", fontWeight = FontWeight.Bold, fontSize = 14.sp)
                 }
             }
-        )
-    }
+        },
+        dismissButton = {
+            if (!isSuccess) {
+                TextButton(
+                    onClick = onDismiss,
+                    enabled = !isLoading,
+                    modifier = Modifier.testTag("cancel_password_reset_button")
+                ) {
+                    Text("Cancel", color = Color(0xFF64748B), fontSize = 14.sp)
+                }
+            }
+        }
+    )
 }

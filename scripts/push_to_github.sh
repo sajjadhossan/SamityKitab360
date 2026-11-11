@@ -9,10 +9,13 @@ set -e
 REPO_URL_DEFAULT="https://github.com/sajjadhossan/SamityKitab360.git"
 GITHUB_USER_DEFAULT="sajjadhossan"
 GITHUB_EMAIL_DEFAULT="hossansajjad1994@gmail.com"
-VERSION="v1.0.0"
+
+# Auto-detect version from app/build.gradle.kts
+GRADLE_VER=$(grep -o 'versionName = "[^"]*"' app/build.gradle.kts | cut -d'"' -f2 || echo "1.0.1")
+VERSION="v${GRADLE_VER:-1.0.1}"
 
 echo "=========================================================="
-echo "🚀 [Samity Kitab 360] Preparing to Push Code, Web & APK"
+echo "🚀 [Samity Kitab 360] Preparing to Push Code, Web & APK ($VERSION)"
 echo "=========================================================="
 
 # 1. Configure Git Safe Directory (Resolves Git CVE-2022-24765 dubious ownership error)

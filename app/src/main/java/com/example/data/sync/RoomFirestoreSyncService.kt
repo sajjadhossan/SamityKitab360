@@ -83,6 +83,10 @@ class RoomFirestoreSyncService(
     // Audit logs
     val syncLogs = mutableStateListOf<FirestoreSyncLog>()
 
+    // Cross-Device Real-Time Sync Callbacks
+    var onRemoteDepositReceived: ((Deposit) -> Unit)? = null
+    var onRemoteMemberReceived: ((Member) -> Unit)? = null
+
     // Realtime listeners
     private var memberListenerReg: ListenerRegistration? = null
     private var depositListenerReg: ListenerRegistration? = null
@@ -393,6 +397,9 @@ class RoomFirestoreSyncService(
                         if (membersToUpsert.isNotEmpty()) {
                             memberDao.insertAll(membersToUpsert)
                             updateSyncMetrics(samityId)
+                            withContext(Dispatchers.Main) {
+                                membersToUpsert.forEach { onRemoteMemberReceived?.invoke(it.toDomainMember()) }
+                            }
                         }
                     }
                 }
@@ -410,6 +417,9 @@ class RoomFirestoreSyncService(
                         if (depositsToUpsert.isNotEmpty()) {
                             depositDao.insertAll(depositsToUpsert)
                             updateSyncMetrics(samityId)
+                            withContext(Dispatchers.Main) {
+                                depositsToUpsert.forEach { onRemoteDepositReceived?.invoke(it.toDomainDeposit()) }
+                            }
                         }
                     }
                 }
