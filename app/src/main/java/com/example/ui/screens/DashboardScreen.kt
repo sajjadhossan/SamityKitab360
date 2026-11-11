@@ -1,18 +1,22 @@
 package com.example.ui.screens
 
+import androidx.compose.animation.*
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.ArrowForward
+import androidx.compose.material.icons.automirrored.filled.ReceiptLong
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
-import androidx.compose.runtime.Composable
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -24,7 +28,10 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.example.data.model.AuditLog
 import com.example.data.model.Deposit
+import com.example.data.model.Expense
+import com.example.data.model.Samity
 import com.example.data.model.UserRole
 import com.example.data.repository.SamityRepository
 import com.example.ui.language.LanguageManager
@@ -58,6 +65,12 @@ fun DashboardScreen(
     val samity = repository.activeSamity
     val members = repository.activeMembers
     val deposits = repository.activeDeposits
+    val expenses = repository.activeExpenses
+    val auditLogs = repository.auditLogs
+    val samities = repository.samities
+    val currentUser = repository.userSession.currentUser
+
+    var selectedActivityTab by remember { mutableStateOf(0) }
 
     val totalMembersCount = members.size
     val paidCount = members.count { it.currentMonthPaid >= it.monthlyFee && it.monthlyFee > 0 }
@@ -75,13 +88,15 @@ fun DashboardScreen(
             .padding(horizontal = 16.dp, vertical = 12.dp),
         verticalArrangement = Arrangement.spacedBy(16.dp)
     ) {
-        // Welcome Banner & Role Badge
+        // Welcome Banner & User Session Profile Card
         item {
             Card(
                 colors = CardDefaults.cardColors(containerColor = SamityNavyPrimary),
-                shape = RoundedCornerShape(16.dp),
-                elevation = CardDefaults.cardElevation(2.dp),
-                modifier = Modifier.fillMaxWidth()
+                shape = RoundedCornerShape(20.dp),
+                elevation = CardDefaults.cardElevation(3.dp),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .testTag("dashboard_user_profile_hub_card")
             ) {
                 Column(modifier = Modifier.padding(16.dp)) {
                     Row(
@@ -89,46 +104,107 @@ fun DashboardScreen(
                         horizontalArrangement = Arrangement.SpaceBetween,
                         verticalAlignment = Alignment.CenterVertically
                     ) {
-                        Column(modifier = Modifier.weight(1f)) {
-                            Text(
-                                text = if (isBn) "স্বাগতম, ${repository.currentUserRole.titleBn}" else "Welcome, ${repository.currentUserRole.titleEn}",
-                                color = SamityGold,
-                                fontSize = 13.sp,
-                                fontWeight = FontWeight.Bold
-                            )
-                            Text(
-                                text = if (isBn) samity.nameBn else samity.nameEn,
-                                color = Color.White,
-                                fontSize = 18.sp,
-                                fontWeight = FontWeight.Bold
-                            )
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically,
+                            modifier = Modifier.weight(1f)
+                        ) {
+                            Box(
+                                modifier = Modifier
+                                    .size(46.dp)
+                                    .clip(CircleShape)
+                                    .background(SamityGold),
+                                contentAlignment = Alignment.Center
+                            ) {
+                                Text(
+                                    text = currentUser.name.take(1).uppercase(),
+                                    fontWeight = FontWeight.ExtraBold,
+                                    fontSize = 20.sp,
+                                    color = SamityNavyDark
+                                )
+                            }
+
+                            Spacer(modifier = Modifier.width(12.dp))
+
+                            Column {
+                                Text(
+                                    text = if (isBn) "স্বাগতম, ${currentUser.name}" else "Welcome, ${currentUser.name}",
+                                    color = Color.White,
+                                    fontSize = 15.sp,
+                                    fontWeight = FontWeight.Bold,
+                                    maxLines = 1,
+                                    overflow = TextOverflow.Ellipsis
+                                )
+                                Row(
+                                    verticalAlignment = Alignment.CenterVertically,
+                                    modifier = Modifier.padding(top = 2.dp)
+                                ) {
+                                    Surface(
+                                        shape = RoundedCornerShape(4.dp),
+                                        color = SamityGold.copy(alpha = 0.25f)
+                                    ) {
+                                        Text(
+                                            text = if (isBn) repository.currentUserRole.titleBn else repository.currentUserRole.titleEn,
+                                            color = SamityGold,
+                                            fontSize = 9.5.sp,
+                                            fontWeight = FontWeight.Bold,
+                                            modifier = Modifier.padding(horizontal = 5.dp, vertical = 1.5.dp)
+                                        )
+                                    }
+                                    Spacer(modifier = Modifier.width(6.dp))
+                                    Text(
+                                        text = if (isBn) samity.nameBn else samity.nameEn,
+                                        color = Color(0xFFD0E4FF),
+                                        fontSize = 11.sp,
+                                        maxLines = 1,
+                                        overflow = TextOverflow.Ellipsis
+                                    )
+                                }
+                            }
                         }
+
                         Surface(
                             shape = RoundedCornerShape(12.dp),
                             color = SamityNavyDark
                         ) {
-                            Text(
-                                text = if (isBn) "চলতি মাস: অক্টোবর ২০২৬" else "Month: Oct 2026",
-                                color = Color.White,
-                                fontSize = 11.sp,
-                                modifier = Modifier.padding(horizontal = 10.dp, vertical = 5.dp)
-                            )
+                            Row(
+                                verticalAlignment = Alignment.CenterVertically,
+                                modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp)
+                            ) {
+                                Box(
+                                    modifier = Modifier
+                                        .size(7.dp)
+                                        .clip(CircleShape)
+                                        .background(Color(0xFF10B981))
+                                )
+                                Spacer(modifier = Modifier.width(5.dp))
+                                Text(
+                                    text = if (isBn) "সেন্ট্রাল হাব" else "Central Hub",
+                                    color = Color.White,
+                                    fontSize = 10.sp,
+                                    fontWeight = FontWeight.SemiBold
+                                )
+                            }
                         }
                     }
 
-                    Spacer(modifier = Modifier.height(12.dp))
+                    Spacer(modifier = Modifier.height(14.dp))
 
-                    // Progress indicator for monthly collection
+                    // Monthly collection progress
                     val progress = if (expectedCollection > 0) (actualCollection / expectedCollection).toFloat().coerceIn(0f, 1f) else 0f
                     val percent = (progress * 100).toInt()
                     Row(
                         modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.SpaceBetween
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
                     ) {
                         Text(
-                            text = if (isBn) "মাসিক চাঁদা আদায়ের অগ্রগতি" else "Monthly Collection Progress",
+                            text = if (isBn) "মাসিক চাঁদা আদায়ের লক্ষ্যমাত্রা (${NumberToWords.formatCurrency(actualCollection, isBn)} / ${NumberToWords.formatCurrency(expectedCollection, isBn)})"
+                            else "Monthly Target (${NumberToWords.formatCurrency(actualCollection, isBn)} / ${NumberToWords.formatCurrency(expectedCollection, isBn)})",
                             color = Color(0xFFD0E4FF),
-                            fontSize = 12.sp
+                            fontSize = 11.sp,
+                            maxLines = 1,
+                            overflow = TextOverflow.Ellipsis,
+                            modifier = Modifier.weight(1f)
                         )
                         Text(
                             text = "${NumberToWords.formatNumber(percent, isBn)}%",
@@ -147,6 +223,420 @@ fun DashboardScreen(
                         color = SamityGold,
                         trackColor = Color(0xFF1E3A5F)
                     )
+                }
+            }
+        }
+
+        // 1. ACTIVE SAMITY ACCOUNTS HUB (সক্রিয় সমিতি ও একাউন্টস হাব)
+        item {
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .testTag("active_samity_accounts_section")
+            ) {
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Box(
+                            modifier = Modifier
+                                .size(34.dp)
+                                .clip(RoundedCornerShape(10.dp))
+                                .background(SamityNavyPrimary),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Icon(
+                                imageVector = Icons.Default.Apartment,
+                                contentDescription = null,
+                                tint = SamityGold,
+                                modifier = Modifier.size(20.dp)
+                            )
+                        }
+                        Spacer(modifier = Modifier.width(10.dp))
+                        Column {
+                            Text(
+                                text = if (isBn) "সক্রিয় সমিতি ও একাউন্টস হাব" else "Active Samity Accounts",
+                                fontSize = 15.sp,
+                                fontWeight = FontWeight.ExtraBold,
+                                color = SlateTextPrimary
+                            )
+                            Text(
+                                text = if (isBn) "মাল্টি-টেন্যান্ট একাউন্টস • যেকোনো সমিতিতে ১-ট্যাপে সুইচ করুন"
+                                else "Multi-tenant hub: Switch active samity in 1-tap",
+                                fontSize = 10.5.sp,
+                                color = Color(0xFF64748B)
+                            )
+                        }
+                    }
+
+                    Surface(
+                        shape = RoundedCornerShape(12.dp),
+                        color = Color(0xFFEFF6FF)
+                    ) {
+                        Text(
+                            text = "${samities.size} ${if (isBn) "সমিতি" else "Accounts"}",
+                            color = SamityNavyPrimary,
+                            fontSize = 10.sp,
+                            fontWeight = FontWeight.Bold,
+                            modifier = Modifier.padding(horizontal = 8.dp, vertical = 3.dp)
+                        )
+                    }
+                }
+
+                Spacer(modifier = Modifier.height(10.dp))
+
+                LazyRow(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .testTag("active_samity_accounts_row"),
+                    horizontalArrangement = Arrangement.spacedBy(12.dp)
+                ) {
+                    items(samities) { s ->
+                        val isActive = (s.id == repository.activeSamityId)
+                        val sMembersCount = repository.members.count { it.samityId == s.id }
+                        val sDepositsSum = repository.deposits.filter { it.samityId == s.id }.sumOf { it.amount }
+
+                        ActiveSamityAccountCard(
+                            samity = s,
+                            isActive = isActive,
+                            memberCount = sMembersCount,
+                            totalCollected = sDepositsSum,
+                            isBn = isBn,
+                            onSelect = { repository.switchSamity(s.id) },
+                            modifier = Modifier.width(260.dp)
+                        )
+                    }
+
+                    item {
+                        // Create New Samity Card
+                        Card(
+                            shape = RoundedCornerShape(16.dp),
+                            colors = CardDefaults.cardColors(containerColor = Color.White),
+                            border = BorderStroke(1.5.dp, Color(0xFFCBD5E1)),
+                            modifier = Modifier
+                                .width(160.dp)
+                                .height(165.dp)
+                                .clip(RoundedCornerShape(16.dp))
+                                .clickable(onClick = onNavigateToSamitySetup)
+                                .testTag("dashboard_add_samity_account_btn")
+                        ) {
+                            Column(
+                                modifier = Modifier
+                                    .fillMaxSize()
+                                    .padding(14.dp),
+                                horizontalAlignment = Alignment.CenterHorizontally,
+                                verticalArrangement = Arrangement.Center
+                            ) {
+                                Box(
+                                    modifier = Modifier
+                                        .size(42.dp)
+                                        .clip(CircleShape)
+                                        .background(SamityEmerald.copy(alpha = 0.15f)),
+                                    contentAlignment = Alignment.Center
+                                ) {
+                                    Icon(
+                                        imageVector = Icons.Default.AddBusiness,
+                                        contentDescription = "New Samity",
+                                        tint = SamityEmerald,
+                                        modifier = Modifier.size(24.dp)
+                                    )
+                                }
+                                Spacer(modifier = Modifier.height(10.dp))
+                                Text(
+                                    text = if (isBn) "+ নতুন সমিতি" else "+ New Samity",
+                                    fontSize = 13.sp,
+                                    fontWeight = FontWeight.Bold,
+                                    color = SamityNavyDark
+                                )
+                                Text(
+                                    text = if (isBn) "একাউন্ট তৈরি" else "Setup Account",
+                                    fontSize = 10.sp,
+                                    color = Color(0xFF64748B)
+                                )
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
+        // 2. USER ACTIVITIES & RECENT TRANSACTIONS HUB (কার্যক্রম ও সাম্প্রতিক লেনদেন হাব)
+        item {
+            Card(
+                shape = RoundedCornerShape(20.dp),
+                colors = CardDefaults.cardColors(containerColor = Color.White),
+                border = CardDefaults.outlinedCardBorder(),
+                elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .testTag("dashboard_activity_hub")
+            ) {
+                Column(modifier = Modifier.padding(16.dp)) {
+                    // Header Row
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            Box(
+                                modifier = Modifier
+                                    .size(34.dp)
+                                    .clip(RoundedCornerShape(10.dp))
+                                    .background(Color(0xFF0F766E).copy(alpha = 0.12f)),
+                                contentAlignment = Alignment.Center
+                            ) {
+                                Icon(
+                                    imageVector = Icons.Default.History,
+                                    contentDescription = "Activities",
+                                    tint = Color(0xFF0F766E),
+                                    modifier = Modifier.size(20.dp)
+                                )
+                            }
+                            Spacer(modifier = Modifier.width(10.dp))
+                            Column {
+                                Text(
+                                    text = if (isBn) "কার্যক্রম ও সাম্প্রতিক লেনদেন সামারি" else "User Activities & Recent Transactions",
+                                    fontSize = 14.5.sp,
+                                    fontWeight = FontWeight.Bold,
+                                    color = SamityNavyDark
+                                )
+                                Text(
+                                    text = if (isBn) "জমা, ব্যয় ও অডিট ট্রেইলের লাইভ হিস্ট্রি" else "Live transactions, expenses & audit log",
+                                    fontSize = 10.5.sp,
+                                    color = Color(0xFF64748B)
+                                )
+                            }
+                        }
+
+                        Surface(
+                            shape = RoundedCornerShape(12.dp),
+                            color = Color(0xFFDCFCE7)
+                        ) {
+                            Row(
+                                verticalAlignment = Alignment.CenterVertically,
+                                modifier = Modifier.padding(horizontal = 8.dp, vertical = 3.dp)
+                            ) {
+                                Box(
+                                    modifier = Modifier
+                                        .size(6.dp)
+                                        .clip(CircleShape)
+                                        .background(Color(0xFF15803D))
+                                )
+                                Spacer(modifier = Modifier.width(4.dp))
+                                Text(
+                                    text = if (isBn) "লাইভ সিঙ্ক" else "Live Sync",
+                                    color = Color(0xFF15803D),
+                                    fontSize = 9.5.sp,
+                                    fontWeight = FontWeight.Bold
+                                )
+                            }
+                        }
+                    }
+
+                    Spacer(modifier = Modifier.height(12.dp))
+
+                    // Mini Metrics Strip
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.spacedBy(8.dp)
+                    ) {
+                        ActivityMetricPill(
+                            label = if (isBn) "জমা" else "Inflow",
+                            value = "+${NumberToWords.formatCurrency(actualCollection, isBn)}",
+                            count = "${deposits.size}টি",
+                            color = StatusPaidGreen,
+                            modifier = Modifier.weight(1f)
+                        )
+                        ActivityMetricPill(
+                            label = if (isBn) "ব্যয়" else "Outflow",
+                            value = "-${NumberToWords.formatCurrency(repository.totalApprovedExpenses, isBn)}",
+                            count = "${expenses.size}টি",
+                            color = Color(0xFFDC2626),
+                            modifier = Modifier.weight(1f)
+                        )
+                        ActivityMetricPill(
+                            label = if (isBn) "পেন্ডিং" else "Pending",
+                            value = "${deposits.count { it.approvalStatus == "Pending" } + expenses.count { it.approvalStatus == "Pending" }}টি",
+                            count = if (isBn) "অনুমোদন" else "Approvals",
+                            color = Color(0xFFD97706),
+                            modifier = Modifier.weight(1f)
+                        )
+                    }
+
+                    Spacer(modifier = Modifier.height(14.dp))
+
+                    // Filter Tab Row
+                    val tabs = listOf(
+                        if (isBn) "সব কার্যক্রম (${deposits.size + expenses.size + auditLogs.take(5).size})" else "All (${deposits.size + expenses.size + auditLogs.take(5).size})",
+                        if (isBn) "জমা ও কালেকশন (${deposits.size})" else "Deposits (${deposits.size})",
+                        if (isBn) "ব্যয় ও খরচ (${expenses.size})" else "Expenses (${expenses.size})",
+                        if (isBn) "অডিট লগ (${auditLogs.size})" else "Audit Log (${auditLogs.size})"
+                    )
+
+                    ScrollableTabRow(
+                        selectedTabIndex = selectedActivityTab,
+                        edgePadding = 0.dp,
+                        containerColor = Color(0xFFF1F5F9),
+                        contentColor = SamityNavyPrimary,
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .clip(RoundedCornerShape(10.dp))
+                    ) {
+                        tabs.forEachIndexed { index, title ->
+                            Tab(
+                                selected = selectedActivityTab == index,
+                                onClick = { selectedActivityTab = index },
+                                text = {
+                                    Text(
+                                        text = title,
+                                        fontSize = 11.sp,
+                                        fontWeight = if (selectedActivityTab == index) FontWeight.Bold else FontWeight.Normal,
+                                        color = if (selectedActivityTab == index) SamityNavyPrimary else Color(0xFF64748B)
+                                    )
+                                },
+                                modifier = Modifier.testTag("tab_activity_$index")
+                            )
+                        }
+                    }
+
+                    Spacer(modifier = Modifier.height(12.dp))
+
+                    // Activity Items based on selected tab
+                    when (selectedActivityTab) {
+                        0 -> {
+                            // Combined latest activities
+                            if (deposits.isEmpty() && expenses.isEmpty() && auditLogs.isEmpty()) {
+                                EmptyActivityState(isBn = isBn)
+                            } else {
+                                Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                                    deposits.take(3).forEach { dep ->
+                                        DepositActivityRowCard(
+                                            deposit = dep,
+                                            isBn = isBn,
+                                            onViewReceipt = { onViewReceipt(dep) }
+                                        )
+                                    }
+                                    expenses.take(2).forEach { exp ->
+                                        ExpenseActivityRowCard(
+                                            expense = exp,
+                                            isBn = isBn
+                                        )
+                                    }
+                                    auditLogs.take(2).forEach { log ->
+                                        AuditLogActivityRowCard(
+                                            log = log,
+                                            isBn = isBn
+                                        )
+                                    }
+                                }
+                            }
+                        }
+                        1 -> {
+                            // Deposits
+                            if (deposits.isEmpty()) {
+                                EmptyActivityState(isBn = isBn, messageBn = "কোনো চাঁদা বা জমা পাওয়া যায়নি")
+                            } else {
+                                Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                                    deposits.take(5).forEach { dep ->
+                                        DepositActivityRowCard(
+                                            deposit = dep,
+                                            isBn = isBn,
+                                            onViewReceipt = { onViewReceipt(dep) }
+                                        )
+                                    }
+                                }
+                            }
+                        }
+                        2 -> {
+                            // Expenses
+                            if (expenses.isEmpty()) {
+                                EmptyActivityState(isBn = isBn, messageBn = "কোনো ব্যয়ের ভাউচার নেই")
+                            } else {
+                                Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                                    expenses.take(5).forEach { exp ->
+                                        ExpenseActivityRowCard(
+                                            expense = exp,
+                                            isBn = isBn
+                                        )
+                                    }
+                                }
+                            }
+                        }
+                        3 -> {
+                            // Audit Logs
+                            if (auditLogs.isEmpty()) {
+                                EmptyActivityState(isBn = isBn, messageBn = "কোনো অডিট লগ রেকর্ড নেই")
+                            } else {
+                                Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                                    auditLogs.take(5).forEach { log ->
+                                        AuditLogActivityRowCard(
+                                            log = log,
+                                            isBn = isBn
+                                        )
+                                    }
+                                }
+                            }
+                        }
+                    }
+
+                    Spacer(modifier = Modifier.height(12.dp))
+
+                    // Action buttons
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.spacedBy(8.dp)
+                    ) {
+                        OutlinedButton(
+                            onClick = onNavigateToDeposits,
+                            shape = RoundedCornerShape(10.dp),
+                            modifier = Modifier
+                                .weight(1f)
+                                .height(40.dp)
+                                .testTag("dashboard_view_all_deposits_btn")
+                        ) {
+                            Text(
+                                text = if (isBn) "সকল জমা (${deposits.size})" else "All Deposits",
+                                fontSize = 11.sp,
+                                fontWeight = FontWeight.Bold,
+                                color = SamityNavyPrimary
+                            )
+                        }
+
+                        OutlinedButton(
+                            onClick = onNavigateToExpenses,
+                            shape = RoundedCornerShape(10.dp),
+                            modifier = Modifier
+                                .weight(1f)
+                                .height(40.dp)
+                                .testTag("dashboard_view_all_expenses_btn")
+                        ) {
+                            Text(
+                                text = if (isBn) "সকল ব্যয় (${expenses.size})" else "All Expenses",
+                                fontSize = 11.sp,
+                                fontWeight = FontWeight.Bold,
+                                color = Color(0xFFDC2626)
+                            )
+                        }
+
+                        OutlinedButton(
+                            onClick = onNavigateToAuditTrail,
+                            shape = RoundedCornerShape(10.dp),
+                            modifier = Modifier
+                                .weight(1f)
+                                .height(40.dp)
+                                .testTag("dashboard_view_audit_btn")
+                        ) {
+                            Text(
+                                text = if (isBn) "অডিট লগ" else "Audit Log",
+                                fontSize = 11.sp,
+                                fontWeight = FontWeight.Bold,
+                                color = Color(0xFF0F766E)
+                            )
+                        }
+                    }
                 }
             }
         }
@@ -1537,5 +2027,479 @@ fun QuadrantFeatureCard(
                 }
             }
         }
+    }
+}
+
+@Composable
+fun ActiveSamityAccountCard(
+    samity: Samity,
+    isActive: Boolean,
+    memberCount: Int,
+    totalCollected: Double,
+    isBn: Boolean,
+    onSelect: () -> Unit,
+    modifier: Modifier = Modifier
+) {
+    Card(
+        shape = RoundedCornerShape(16.dp),
+        colors = CardDefaults.cardColors(
+            containerColor = if (isActive) Color(0xFFEFF6FF) else Color.White
+        ),
+        border = BorderStroke(
+            width = if (isActive) 1.8.dp else 1.dp,
+            color = if (isActive) SamityGold else Color(0xFFE2E8F0)
+        ),
+        elevation = CardDefaults.cardElevation(defaultElevation = if (isActive) 3.dp else 1.dp),
+        modifier = modifier
+            .clip(RoundedCornerShape(16.dp))
+            .clickable(onClick = onSelect)
+            .testTag("samity_account_card_${samity.id}")
+    ) {
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(14.dp)
+        ) {
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Box(
+                    modifier = Modifier
+                        .size(36.dp)
+                        .clip(CircleShape)
+                        .background(if (isActive) SamityNavyPrimary else Color(0xFFE2E8F0)),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.Apartment,
+                        contentDescription = null,
+                        tint = if (isActive) SamityGold else Color(0xFF475569),
+                        modifier = Modifier.size(20.dp)
+                    )
+                }
+
+                Surface(
+                    shape = RoundedCornerShape(12.dp),
+                    color = if (isActive) Color(0xFFDCFCE7) else Color(0xFFF1F5F9)
+                ) {
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        modifier = Modifier.padding(horizontal = 8.dp, vertical = 3.dp)
+                    ) {
+                        if (isActive) {
+                            Box(
+                                modifier = Modifier
+                                    .size(6.dp)
+                                    .clip(CircleShape)
+                                    .background(Color(0xFF15803D))
+                            )
+                            Spacer(modifier = Modifier.width(4.dp))
+                        }
+                        Text(
+                            text = if (isActive) (if (isBn) "বর্তমান সক্রিয়" else "Active") else (if (isBn) "সুইচ করুন" else "Switch"),
+                            color = if (isActive) Color(0xFF15803D) else Color(0xFF64748B),
+                            fontSize = 9.5.sp,
+                            fontWeight = FontWeight.Bold
+                        )
+                    }
+                }
+            }
+
+            Spacer(modifier = Modifier.height(10.dp))
+
+            Text(
+                text = if (isBn) samity.nameBn else samity.nameEn,
+                fontSize = 13.5.sp,
+                fontWeight = FontWeight.Bold,
+                color = SamityNavyDark,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis
+            )
+
+            Text(
+                text = "${samity.regNo} • ${samity.samityType}",
+                fontSize = 10.sp,
+                color = Color(0xFF64748B),
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis
+            )
+
+            Spacer(modifier = Modifier.height(8.dp))
+
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween
+            ) {
+                Column {
+                    Text(
+                        text = if (isBn) "সদস্য সংখ্যা" else "Members",
+                        fontSize = 9.sp,
+                        color = Color(0xFF64748B)
+                    )
+                    Text(
+                        text = "$memberCount জন",
+                        fontSize = 11.5.sp,
+                        fontWeight = FontWeight.Bold,
+                        color = SamityNavyPrimary
+                    )
+                }
+
+                Column(horizontalAlignment = Alignment.End) {
+                    Text(
+                        text = if (isBn) "মাসিক চাঁদা" else "Monthly Fee",
+                        fontSize = 9.sp,
+                        color = Color(0xFF64748B)
+                    )
+                    Text(
+                        text = "${samity.defaultMonthlyFee.toInt()} ৳",
+                        fontSize = 11.5.sp,
+                        fontWeight = FontWeight.Bold,
+                        color = StatusPaidGreen
+                    )
+                }
+            }
+
+            Spacer(modifier = Modifier.height(8.dp))
+
+            Surface(
+                shape = RoundedCornerShape(8.dp),
+                color = if (isActive) SamityNavyPrimary else Color(0xFFF1F5F9),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .clickable(onClick = onSelect)
+            ) {
+                Text(
+                    text = if (isActive) (if (isBn) "✓ নির্বাচিত একাউন্ট" else "✓ Current Account") else (if (isBn) "এই সমিতিতে যান →" else "Switch to Account →"),
+                    color = if (isActive) Color.White else SamityNavyDark,
+                    fontSize = 10.sp,
+                    fontWeight = FontWeight.Bold,
+                    textAlign = androidx.compose.ui.text.style.TextAlign.Center,
+                    modifier = Modifier.padding(vertical = 5.dp)
+                )
+            }
+        }
+    }
+}
+
+@Composable
+fun ActivityMetricPill(
+    label: String,
+    value: String,
+    count: String,
+    color: Color,
+    modifier: Modifier = Modifier
+) {
+    Surface(
+        shape = RoundedCornerShape(12.dp),
+        color = color.copy(alpha = 0.08f),
+        border = BorderStroke(1.dp, color.copy(alpha = 0.2f)),
+        modifier = modifier
+    ) {
+        Column(
+            modifier = Modifier.padding(8.dp),
+            horizontalAlignment = Alignment.Start
+        ) {
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Text(
+                    text = label,
+                    fontSize = 9.5.sp,
+                    fontWeight = FontWeight.Bold,
+                    color = color
+                )
+                Text(
+                    text = count,
+                    fontSize = 8.5.sp,
+                    color = color.copy(alpha = 0.8f)
+                )
+            }
+            Spacer(modifier = Modifier.height(2.dp))
+            Text(
+                text = value,
+                fontSize = 11.sp,
+                fontWeight = FontWeight.ExtraBold,
+                color = color,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis
+            )
+        }
+    }
+}
+
+@Composable
+fun DepositActivityRowCard(
+    deposit: Deposit,
+    isBn: Boolean,
+    onViewReceipt: () -> Unit,
+    modifier: Modifier = Modifier
+) {
+    Surface(
+        shape = RoundedCornerShape(12.dp),
+        color = Color(0xFFF8FAFC),
+        border = BorderStroke(1.dp, Color(0xFFE2E8F0)),
+        modifier = modifier
+            .fillMaxWidth()
+            .clickable(onClick = onViewReceipt)
+    ) {
+        Row(
+            modifier = Modifier.padding(10.dp),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Box(
+                modifier = Modifier
+                    .size(36.dp)
+                    .clip(CircleShape)
+                    .background(StatusPaidGreen.copy(alpha = 0.12f)),
+                contentAlignment = Alignment.Center
+            ) {
+                Icon(
+                    imageVector = Icons.Default.ArrowDownward,
+                    contentDescription = null,
+                    tint = StatusPaidGreen,
+                    modifier = Modifier.size(18.dp)
+                )
+            }
+
+            Spacer(modifier = Modifier.width(10.dp))
+
+            Column(modifier = Modifier.weight(1f)) {
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Text(
+                        text = deposit.memberName,
+                        fontWeight = FontWeight.Bold,
+                        fontSize = 12.5.sp,
+                        color = SamityNavyDark
+                    )
+                    Spacer(modifier = Modifier.width(4.dp))
+                    Surface(
+                        shape = RoundedCornerShape(4.dp),
+                        color = Color(0xFFE2E8F0)
+                    ) {
+                        Text(
+                            text = deposit.memberCode,
+                            fontSize = 8.5.sp,
+                            color = Color(0xFF475569),
+                            modifier = Modifier.padding(horizontal = 4.dp, vertical = 1.dp)
+                        )
+                    }
+                }
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    modifier = Modifier.padding(top = 1.dp)
+                ) {
+                    Text(
+                        text = "${deposit.voucherNo} • ${deposit.depositMethod}",
+                        fontSize = 9.5.sp,
+                        color = Color(0xFF64748B)
+                    )
+                    Spacer(modifier = Modifier.width(4.dp))
+                    Text(
+                        text = "• ${deposit.depositDate}",
+                        fontSize = 9.sp,
+                        color = Color(0xFF94A3B8)
+                    )
+                }
+            }
+
+            Column(horizontalAlignment = Alignment.End) {
+                Text(
+                    text = "+${NumberToWords.formatCurrency(deposit.amount, isBn)}",
+                    fontWeight = FontWeight.ExtraBold,
+                    fontSize = 12.5.sp,
+                    color = StatusPaidGreen
+                )
+                Surface(
+                    shape = RoundedCornerShape(4.dp),
+                    color = SamityNavyPrimary.copy(alpha = 0.1f),
+                    modifier = Modifier.clickable(onClick = onViewReceipt)
+                ) {
+                    Text(
+                        text = if (isBn) "রসিদ দেখুন >" else "Receipt >",
+                        fontSize = 9.sp,
+                        fontWeight = FontWeight.Bold,
+                        color = SamityNavyPrimary,
+                        modifier = Modifier.padding(horizontal = 4.dp, vertical = 1.5.dp)
+                    )
+                }
+            }
+        }
+    }
+}
+
+@Composable
+fun ExpenseActivityRowCard(
+    expense: Expense,
+    isBn: Boolean,
+    modifier: Modifier = Modifier
+) {
+    Surface(
+        shape = RoundedCornerShape(12.dp),
+        color = Color(0xFFF8FAFC),
+        border = BorderStroke(1.dp, Color(0xFFE2E8F0)),
+        modifier = modifier.fillMaxWidth()
+    ) {
+        Row(
+            modifier = Modifier.padding(10.dp),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Box(
+                modifier = Modifier
+                    .size(36.dp)
+                    .clip(CircleShape)
+                    .background(Color(0xFFDC2626).copy(alpha = 0.12f)),
+                contentAlignment = Alignment.Center
+            ) {
+                Icon(
+                    imageVector = Icons.Default.ArrowUpward,
+                    contentDescription = null,
+                    tint = Color(0xFFDC2626),
+                    modifier = Modifier.size(18.dp)
+                )
+            }
+
+            Spacer(modifier = Modifier.width(10.dp))
+
+            Column(modifier = Modifier.weight(1f)) {
+                Text(
+                    text = if (isBn) expense.titleBn else expense.titleEn,
+                    fontWeight = FontWeight.Bold,
+                    fontSize = 12.5.sp,
+                    color = SamityNavyDark
+                )
+                Text(
+                    text = "${expense.voucherNo} • ${expense.category} • ${expense.expenseDate}",
+                    fontSize = 9.5.sp,
+                    color = Color(0xFF64748B)
+                )
+                if (expense.paidTo.isNotEmpty()) {
+                    Text(
+                        text = "${if (isBn) "প্রাপক: " else "To: "}${expense.paidTo} (${expense.paymentMethod})",
+                        fontSize = 9.sp,
+                        color = Color(0xFF94A3B8)
+                    )
+                }
+            }
+
+            Column(horizontalAlignment = Alignment.End) {
+                Text(
+                    text = "-${NumberToWords.formatCurrency(expense.amount, isBn)}",
+                    fontWeight = FontWeight.ExtraBold,
+                    fontSize = 12.5.sp,
+                    color = Color(0xFFDC2626)
+                )
+                Surface(
+                    shape = RoundedCornerShape(4.dp),
+                    color = Color(0xFFDCFCE7)
+                ) {
+                    Text(
+                        text = expense.approvalStatus,
+                        fontSize = 8.5.sp,
+                        fontWeight = FontWeight.Bold,
+                        color = Color(0xFF15803D),
+                        modifier = Modifier.padding(horizontal = 4.dp, vertical = 1.dp)
+                    )
+                }
+            }
+        }
+    }
+}
+
+@Composable
+fun AuditLogActivityRowCard(
+    log: AuditLog,
+    isBn: Boolean,
+    modifier: Modifier = Modifier
+) {
+    Surface(
+        shape = RoundedCornerShape(12.dp),
+        color = Color(0xFFF8FAFC),
+        border = BorderStroke(1.dp, Color(0xFFE2E8F0)),
+        modifier = modifier.fillMaxWidth()
+    ) {
+        Row(
+            modifier = Modifier.padding(10.dp),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Box(
+                modifier = Modifier
+                    .size(36.dp)
+                    .clip(CircleShape)
+                    .background(Color(0xFF0F766E).copy(alpha = 0.12f)),
+                contentAlignment = Alignment.Center
+            ) {
+                Icon(
+                    imageVector = Icons.Default.Security,
+                    contentDescription = null,
+                    tint = Color(0xFF0F766E),
+                    modifier = Modifier.size(18.dp)
+                )
+            }
+
+            Spacer(modifier = Modifier.width(10.dp))
+
+            Column(modifier = Modifier.weight(1f)) {
+                Text(
+                    text = if (isBn) log.actionBn else log.actionEn,
+                    fontWeight = FontWeight.Bold,
+                    fontSize = 12.sp,
+                    color = SamityNavyDark
+                )
+                Text(
+                    text = "${log.performedBy} (${log.userRole}) • ${log.timestamp}",
+                    fontSize = 9.5.sp,
+                    color = Color(0xFF64748B)
+                )
+                if (log.details.isNotEmpty()) {
+                    Text(
+                        text = log.details,
+                        fontSize = 9.sp,
+                        color = Color(0xFF94A3B8),
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis
+                    )
+                }
+            }
+        }
+    }
+}
+
+@Composable
+fun EmptyActivityState(
+    isBn: Boolean,
+    messageBn: String? = null,
+    modifier: Modifier = Modifier
+) {
+    Column(
+        modifier = modifier
+            .fillMaxWidth()
+            .padding(vertical = 20.dp),
+        horizontalAlignment = Alignment.CenterHorizontally
+    ) {
+        Box(
+            modifier = Modifier
+                .size(44.dp)
+                .clip(CircleShape)
+                .background(Color(0xFFF1F5F9)),
+            contentAlignment = Alignment.Center
+        ) {
+            Icon(
+                imageVector = Icons.Default.Inbox,
+                contentDescription = null,
+                tint = Color(0xFF94A3B8),
+                modifier = Modifier.size(24.dp)
+            )
+        }
+        Spacer(modifier = Modifier.height(8.dp))
+        Text(
+            text = messageBn ?: if (isBn) "কোনো সাম্প্রতিক কার্যক্রম পাওয়া যায়নি" else "No recent activities found",
+            fontSize = 12.sp,
+            color = Color(0xFF64748B),
+            fontWeight = FontWeight.Medium
+        )
     }
 }
