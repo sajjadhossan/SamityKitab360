@@ -171,6 +171,12 @@ fun LoginAndActivationScreen(
                 text = { Text(if (isBn) "লাইসেন্স কি" else "License Key", fontWeight = FontWeight.Bold, fontSize = 12.sp) },
                 icon = { Icon(Icons.Default.Key, contentDescription = null, modifier = Modifier.size(16.dp)) }
             )
+            Tab(
+                selected = selectedTab == 4,
+                onClick = { selectedTab = 4 },
+                text = { Text(if (isBn) "ফায়ারবেস লগইন" else "Firebase Auth", fontWeight = FontWeight.Bold, fontSize = 12.sp) },
+                icon = { Icon(Icons.Default.Cloud, contentDescription = null, modifier = Modifier.size(16.dp)) }
+            )
         }
 
         Spacer(modifier = Modifier.height(14.dp))
@@ -189,6 +195,12 @@ fun LoginAndActivationScreen(
                 1 -> StaffLoginTab(repository = repository, onLoginSuccess = onLoginSuccess)
                 2 -> MemberActivationTab(repository = repository) { selectedTab = 0 }
                 3 -> LicenseActivationTab(repository = repository)
+                4 -> LoginScreen(
+                    onLoginSuccess = { user ->
+                        repository.switchRole(UserRole.SUPER_ADMIN)
+                        onLoginSuccess()
+                    }
+                )
             }
         }
     }

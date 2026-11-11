@@ -59,6 +59,7 @@ sealed class Screen {
     object SamitySetup : Screen()
     object MemberPortal : Screen()
     object LoginAndActivation : Screen()
+    object Login : Screen()
     object SaaSAdminControl : Screen()
     object RolePermissionManager : Screen()
     object VercelCloudSync : Screen()
@@ -482,6 +483,18 @@ fun MainAppContent(repository: SamityRepository) {
                         }
                     )
 
+                    DrawerItem(
+                        title = if (isBn) "ফায়ারবেস ক্লাউড লগইন" else "Firebase Cloud Login",
+                        icon = Icons.Default.Cloud,
+                        selected = currentScreen is Screen.Login,
+                        badgeText = "M3",
+                        iconColor = Color(0xFFEA580C),
+                        onClick = {
+                            currentScreen = Screen.Login
+                            coroutineScope.launch { drawerState.close() }
+                        }
+                    )
+
                     Spacer(modifier = Modifier.height(24.dp))
 
                     // Drawer Footer
@@ -560,6 +573,7 @@ fun MainAppContent(repository: SamityRepository) {
                         is Screen.SamitySetup -> if (isBn) "সমিতি সেটআপ" else "Samity Setup"
                         is Screen.MemberPortal -> if (isBn) "সদস্য পোর্টাল" else "Member Portal"
                         is Screen.LoginAndActivation -> if (isBn) "লগইন ও এক্টিভেশন" else "Login"
+                        is Screen.Login -> if (isBn) "ফায়ারবেস লগইন" else "Firebase Login"
                         is Screen.SaaSAdminControl -> if (isBn) "সাশ কন্ট্রোল" else "SaaS Control"
                         is Screen.RolePermissionManager -> if (isBn) "রোল পারমিশন" else "Role Permissions"
                         is Screen.VercelCloudSync -> if (isBn) "ভার্সেল সিঙ্ক" else "Cloud Sync"
@@ -579,6 +593,7 @@ fun MainAppContent(repository: SamityRepository) {
                 currentScreen !is Screen.BulkDeposit &&
                 currentScreen !is Screen.SamitySetup &&
                 currentScreen !is Screen.LoginAndActivation &&
+                currentScreen !is Screen.Login &&
                 currentScreen !is Screen.SaaSAdminControl &&
                 currentScreen !is Screen.RolePermissionManager &&
                 currentScreen !is Screen.VercelCloudSync &&
@@ -966,6 +981,18 @@ fun MainAppContent(repository: SamityRepository) {
                                 Screen.MemberPortal
                             else
                                 Screen.Dashboard
+                        }
+                    )
+                }
+
+                is Screen.Login -> {
+                    LoginScreen(
+                        onLoginSuccess = { user ->
+                            repository.switchRole(UserRole.SUPER_ADMIN)
+                            currentScreen = Screen.Dashboard
+                        },
+                        onNavigateBack = {
+                            currentScreen = Screen.Dashboard
                         }
                     )
                 }
