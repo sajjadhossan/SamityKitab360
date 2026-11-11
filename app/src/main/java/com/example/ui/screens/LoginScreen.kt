@@ -389,10 +389,20 @@ fun LoginScreen(
                             )
                         },
                         trailingIcon = {
-                            IconButton(onClick = { passwordVisible = !passwordVisible }) {
+                            IconButton(
+                                onClick = { passwordVisible = !passwordVisible },
+                                modifier = Modifier.testTag("password_visibility_toggle")
+                            ) {
+                                val visibilityIcon = if (passwordVisible) {
+                                    Icons.Filled.Visibility
+                                } else {
+                                    Icons.Filled.VisibilityOff
+                                }
+                                val description = if (passwordVisible) "Hide password" else "Show password"
                                 Icon(
-                                    imageVector = if (passwordVisible) Icons.Default.Visibility else Icons.Default.VisibilityOff,
-                                    contentDescription = if (passwordVisible) "Hide password" else "Show password"
+                                    imageVector = visibilityIcon,
+                                    contentDescription = description,
+                                    tint = if (passwordVisible) SamityNavyPrimary else Color(0xFF64748B)
                                 )
                             }
                         },

@@ -1,0 +1,11 @@
+{
+  "name": "samity-kitab-360",
+  "private": true,
+  "version": "1.0.0",
+  "scripts": {
+    "install:web": "npm --prefix web install",
+    "build": "npm --prefix web install && npm --prefix web run build",
+    "dev": "npm --prefix web run dev",
+    "start": "npm --prefix web run preview"
+  }
+}
